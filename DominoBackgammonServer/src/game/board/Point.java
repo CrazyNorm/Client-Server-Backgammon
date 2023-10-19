@@ -13,9 +13,8 @@ public class Point {
         this.count = count;
         this.player = player;
 
-        if (this.count > 2) this.state = PointState.Closed;
-        else if (this.count == 1) this.state = PointState.Blot;
-        else this.state = PointState.Open;
+        // infer point state from starting count
+        this.updateState();
     }
 
     public Point() {
@@ -30,9 +29,11 @@ public class Point {
     }
     public void addPiece() {
         this.count++;
+        updateState();
     }
     public void removePiece() {
         this.count--;
+        updateState();
     }
 
     public Player getPlayer() {
@@ -51,7 +52,17 @@ public class Point {
     public Boolean isClosed() {
         return (this.state == PointState.Closed);
     }
-    public void setState(PointState state) {
-        this.state = state;
+    private void updateState() {
+        // infers the current point state from the piece count
+
+        if (this.count > 2) {
+            this.state = PointState.Closed;
+        }
+        else if (this.count == 1) {
+            this.state = PointState.Blot;
+        }
+        else {
+            this.state = PointState.Open;
+        }
     }
 }
