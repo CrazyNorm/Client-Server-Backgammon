@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Domino Backgammon Server.iml" filepath="$PROJECT_DIR$/Domino Backgammon Server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DominoBackgammonServer.iml" filepath="$PROJECT_DIR$/DominoBackgammonServer.iml" />
     </modules>
   </component>
 </project>
