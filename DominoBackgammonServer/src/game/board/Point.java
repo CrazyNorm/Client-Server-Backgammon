@@ -55,7 +55,7 @@ public class Point {
     private void updateState() {
         // infers the current point state from the piece count
 
-        if (this.count > 2) {
+        if (this.count >= 2) {
             this.state = PointState.Closed;
         }
         else if (this.count == 1) {
