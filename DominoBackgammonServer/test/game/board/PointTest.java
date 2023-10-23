@@ -10,19 +10,19 @@ class PointTest {
 
     @Test
     void testClosedConstructor() {
-        Point testPoint = new Point(3, Player.One);
+        Point testPoint = new Point(3, Player.White);
         assertEquals(testPoint.isClosed(), true);
     }
 
     @Test
     void testBlotConstructor() {
-        Point testPoint = new Point(1, Player.One);
+        Point testPoint = new Point(1, Player.White);
         assertEquals(testPoint.isBlot(), true);
     }
 
     @Test
     void testOpenConstructor() {
-        Point testPoint = new Point(0, Player.One);
+        Point testPoint = new Point(0, Player.White);
         assertEquals(testPoint.isOpen(), true);
     }
 

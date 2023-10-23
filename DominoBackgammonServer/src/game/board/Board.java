@@ -34,6 +34,7 @@ public class Board {
         this.offBoard = new int[PLAYER_COUNT];
         this.bar = new int[PLAYER_COUNT];
         this.pipCounts = new int[PLAYER_COUNT];
+        updatePipCount();
     }
 
 
