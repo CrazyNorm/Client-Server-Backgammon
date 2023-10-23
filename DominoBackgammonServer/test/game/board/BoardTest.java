@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class BoardTest {
@@ -26,7 +27,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(12);
 
         assertEquals(p.getCount(), 4);
-        assertEquals(p.isClosed(), true);
+        assertTrue(p.isClosed());
         assertEquals(p.getPlayer(), Player.Black);
     }
 
@@ -37,7 +38,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(1);
 
         assertEquals(p.getCount(), 1);
-        assertEquals(p.isBlot(), true);
+        assertTrue(p.isBlot());
         assertEquals(p.getPlayer(), Player.Black);
     }
 
@@ -49,7 +50,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(1);
 
         assertEquals(p.getCount(), 0);
-        assertEquals(p.isOpen(), true);
+        assertTrue(p.isOpen());
         assertEquals(p.getPlayer(), Player.None);
     }
 
@@ -60,7 +61,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(2);
 
         assertEquals(p.getCount(), 1);
-        assertEquals(p.isBlot(), true);
+        assertTrue(p.isBlot());
         assertEquals(p.getPlayer(), Player.Black);
     }
 
@@ -72,7 +73,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(2);
 
         assertEquals(p.getCount(), 2);
-        assertEquals(p.isClosed(), true);
+        assertTrue(p.isClosed());
         assertEquals(p.getPlayer(), Player.Black);
     }
 
@@ -84,7 +85,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(6);
 
         assertEquals(p.getCount(), 4);
-        assertEquals(p.isClosed(), true);
+        assertTrue(p.isClosed());
         assertEquals(p.getPlayer(), Player.White);
     }
 
@@ -98,7 +99,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(6);
 
         assertEquals(p.getCount(), 1);
-        assertEquals(p.isBlot(), true);
+        assertTrue(p.isBlot());
         assertEquals(p.getPlayer(), Player.White);
     }
 
@@ -113,7 +114,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(6);
 
         assertEquals(p.getCount(), 0);
-        assertEquals(p.isOpen(), true);
+        assertTrue(p.isOpen());
         assertEquals(p.getPlayer(), Player.None);
     }
 
@@ -136,7 +137,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(2);
 
         assertEquals(p.getCount(), 1);
-        assertEquals(p.isBlot(), true);
+        assertTrue(p.isBlot());
         assertEquals(p.getPlayer(), Player.Black);
     }
 
@@ -150,7 +151,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(2);
 
         assertEquals(p.getCount(), 2);
-        assertEquals(p.isClosed(), true);
+        assertTrue(p.isClosed());
         assertEquals(p.getPlayer(), Player.Black);
     }
 
@@ -174,7 +175,7 @@ class BoardTest {
         Point p = mockBoard.getPoint(1);
 
         assertEquals(p.getCount(), 0);
-        assertEquals(p.isOpen(), true);
+        assertTrue(p.isOpen());
         assertEquals(p.getPlayer(), Player.None);
     }
 

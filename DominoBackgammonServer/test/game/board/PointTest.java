@@ -4,6 +4,7 @@ import game.common.Player;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class PointTest {
@@ -11,19 +12,19 @@ class PointTest {
     @Test
     void testClosedConstructor() {
         Point testPoint = new Point(3, Player.White);
-        assertEquals(testPoint.isClosed(), true);
+        assertTrue(testPoint.isClosed());
     }
 
     @Test
     void testBlotConstructor() {
         Point testPoint = new Point(1, Player.White);
-        assertEquals(testPoint.isBlot(), true);
+        assertTrue(testPoint.isBlot());
     }
 
     @Test
     void testOpenConstructor() {
         Point testPoint = new Point(0, Player.White);
-        assertEquals(testPoint.isOpen(), true);
+        assertTrue(testPoint.isOpen());
     }
 
     @Test
@@ -32,6 +33,6 @@ class PointTest {
 
         assertEquals(testPoint.getCount(), 0);
         assertEquals(testPoint.getPlayer(), Player.None);
-        assertEquals(testPoint.isOpen(), true);
+        assertTrue(testPoint.isOpen());
     }
 }
