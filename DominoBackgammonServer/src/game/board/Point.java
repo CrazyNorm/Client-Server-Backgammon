@@ -43,13 +43,13 @@ public class Point {
         this.player = player;
     }
 
-    public Boolean isOpen() {
+    public boolean isOpen() {
         return (this.state == PointState.Open);
     }
-    public Boolean isBlot() {
+    public boolean isBlot() {
         return (this.state == PointState.Blot);
     }
-    public Boolean isClosed() {
+    public boolean isClosed() {
         return (this.state == PointState.Closed);
     }
     private void updateState() {
