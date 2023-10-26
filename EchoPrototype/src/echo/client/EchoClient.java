@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 public class EchoClient {
 
     private static final int PORT = 8081;
-    private static final String IP_ADDRESS = "127.0.0.1";
+    private static final String IP_ADDRESS = "34.127.77.157";
 
     public static void main(String[] args) {
         try (
