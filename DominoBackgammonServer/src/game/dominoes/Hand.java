@@ -52,6 +52,7 @@ public class Hand {
         // Only 8 dominoes in a set, so linear search
 
         for (int i = 0; i < dominoes.length; i++) {
+            if (dominoes[i] == null) continue;
             if (dominoes[i].getSide1() == side1
                     && dominoes[i].getSide2() == side2
             ) {

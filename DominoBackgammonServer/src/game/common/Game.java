@@ -203,6 +203,27 @@ public class Game {
         return dominoes.isNextDouble(val);
     }
 
+    public void useDomino(int side1, int side2) {
+        // Assumes validity has already been checked
+
+        Hand dominoes;
+        if (currentPlayer == Player.White) dominoes = whiteDominoes;
+        else dominoes = blackDominoes;
+
+        dominoes.useDomino(side1, side2);
+    }
+
+    public void useDomino(int val, int side1, int side2) {
+        // Assumes validity has already been checked
+
+        Hand dominoes;
+        if (currentPlayer == Player.White) dominoes = whiteDominoes;
+        else dominoes = blackDominoes;
+
+        dominoes.useDouble(val);
+        dominoes.useDomino(side1, side2);
+    }
+
 
     public void nextTurn() {
         if (currentPlayer == Player.White) currentPlayer = Player.Black;
@@ -211,6 +232,16 @@ public class Game {
             // only increment turn count when both players have taken a turn
             turnCount++;
         }
+    }
+
+    public boolean checkHands() {
+        if (whiteDominoes.getRemaining() > 0) return false;
+        else return (blackDominoes.getRemaining() <= 0);
+    }
+
+    public void swapHands() {
+        whiteDominoes.swapDominoSet();
+        blackDominoes.swapDominoSet();
     }
 
     // check turn (side1, side2, (val,) start1, end1, start2, end2(, start3, end3, start4, end4))?
