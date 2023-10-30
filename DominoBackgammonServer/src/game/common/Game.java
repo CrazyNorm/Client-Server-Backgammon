@@ -128,10 +128,51 @@ public class Game {
 
 
     public Player checkWin() {
-        // checks if the current player has won
+        // checks if either player has won
         // called for each player's turn, so don't need to check both players
         if (boardState.getOffCount(currentPlayer) == 15) return currentPlayer;
         else return Player.None;
+    }
+
+    public int checkWinType(Player player) {
+        // decides how many points a win is worth for the given player
+        boolean backgammon = false;
+        boolean gammon = false;
+
+        if (player == Player.White) {
+            // check for backgammon
+            if (boardState.getBarCount(Player.Black) > 0) backgammon = true;
+            for (int i = 1; i < 7; i++) {
+                // check if any pieces in home board controlled by opposition player
+                if (boardState.getPoint(i).getPlayer() == Player.Black) {
+                    backgammon = true;
+                    break;
+                }
+            }
+
+            // check for gammon
+            if (boardState.getOffCount(Player.Black) < 1) gammon = true;
+        }
+        else {
+            // check for backgammon
+            if (boardState.getBarCount(Player.White) > 0) backgammon = true;
+            for (int i = 1; i < 7; i++) {
+                // check if any pieces in home board controlled by opposition player
+                if (boardState.getPoint(24 - i).getPlayer() == Player.White) {
+                    backgammon = true;
+                    break;
+                }
+            }
+
+            // check for gammon
+            if (boardState.getOffCount(Player.White) < 1) gammon = true;
+        }
+
+
+        // return point total based on win type
+        if (backgammon) return 3;
+        else if (gammon) return 2;
+        else return 1;
     }
 
 
