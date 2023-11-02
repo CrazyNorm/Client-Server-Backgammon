@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dominobackgammonclient.ui.common.BGColour
+import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
 fun BoardHalf(
@@ -76,11 +77,13 @@ fun PreviewHalfBoard() {
         PointData(2, BGColour.WHITE)
     )
 
-    BoardHalf(
-        topData,
-        bottomData,
-        Modifier
-            .fillMaxSize()
-            .background(Color(0xff118811))
-    )
+    DominoBackgammonClientTheme {
+        BoardHalf(
+            topData,
+            bottomData,
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xff118811))
+        )
+    }
 }
