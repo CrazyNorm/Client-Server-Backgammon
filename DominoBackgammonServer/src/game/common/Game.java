@@ -234,7 +234,16 @@ public class Game {
         }
     }
 
+    public int getTurnCount() {
+        return this.turnCount;
+    }
+
+    public Player getCurrentPlayer() {
+        return this.currentPlayer;
+    }
+
     public boolean checkHands() {
+        // check both hands to decide if domino swap is needed
         if (whiteDominoes.getRemaining() > 0) return false;
         else return (blackDominoes.getRemaining() <= 0);
     }
@@ -248,4 +257,5 @@ public class Game {
     // check turn (encoded turn)?
     // just call check domino & check move & check win from socket thread?
     // check turn (side1, start1, end1)?
+    // check turn (Move object)?
 }
