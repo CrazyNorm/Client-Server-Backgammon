@@ -1,7 +1,10 @@
 package com.example.dominobackgammonclient.ui.board
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -14,27 +17,29 @@ import com.example.dominobackgammonclient.ui.theme.TriangleShape
 @Composable
 fun Point(
     pointColour: BGColour,
-    data: PointData,
+    data: PointData?,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier) {
-        Point(pointColour)
-        Column(
-            verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(.18f)
-        ) {
-            var i = 0
+    if (data == null) Point(pointColour, modifier)
+    else {
+        Box(modifier) {
+            Point(pointColour)
+            Column(
+                verticalArrangement = Arrangement.Bottom,
+                modifier = Modifier
+                    .aspectRatio(.18f)
+            ) {
+                var i = 0
 
-            if (data.count > 5) {
-                Piece(data.colour, data.count, Modifier)
-                i++
-            }
+                if (data.count > 5) {
+                    Piece(data.colour, data.count, Modifier)
+                    i++
+                }
 
-            while (i < data.count && i < 5) {
-                Piece(data.colour)
-                i++
+                while (i < data.count && i < 5) {
+                    Piece(data.colour)
+                    i++
+                }
             }
         }
     }
@@ -56,7 +61,6 @@ fun Point(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .aspectRatio(0.18f)
             .clip(TriangleShape())
             .background(color)

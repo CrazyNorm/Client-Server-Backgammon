@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,7 +60,6 @@ fun LabelPiece(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(color)
@@ -83,7 +81,6 @@ fun Piece(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(color)
