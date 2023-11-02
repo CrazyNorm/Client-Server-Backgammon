@@ -15,8 +15,8 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
 fun BoardHalf(
-    topData: Array<PointData?>,
-    bottomData: Array<PointData?>,
+    topData: List<PointData?>,
+    bottomData: List<PointData?>,
     modifier: Modifier = Modifier
 ) {
     // top data works left to right
@@ -35,6 +35,7 @@ fun BoardHalf(
                     Modifier
                         .weight(1f)
                         .rotate(180f)
+                    //TODO numbers are upside down for labelled points on the top row
                 )
             }
         }
@@ -60,7 +61,7 @@ fun BoardHalf(
 @Preview (widthDp = 300, heightDp = 700)
 @Composable
 fun PreviewHalfBoard() {
-    val bottomData = arrayOf(
+    val bottomData = listOf(
         PointData(2, BGColour.BLACK),
         null,
         null,
@@ -68,7 +69,7 @@ fun PreviewHalfBoard() {
         null,
         PointData(5, BGColour.WHITE)
     )
-    val topData = arrayOf(
+    val topData = listOf(
         PointData(5, BGColour.BLACK),
         null,
         null,
