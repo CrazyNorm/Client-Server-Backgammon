@@ -14,8 +14,7 @@ import com.example.dominobackgammonclient.ui.theme.TriangleShape
 @Composable
 fun Point(
     pointColour: BGColour,
-    pieceColour: BGColour,
-    pieceCount: Int,
+    data: PointData,
     modifier: Modifier = Modifier
 ) {
     Box(modifier) {
@@ -28,13 +27,13 @@ fun Point(
         ) {
             var i = 0
 
-            if (pieceCount > 5) {
-                Piece(pieceColour, pieceCount, Modifier)
+            if (data.count > 5) {
+                Piece(data.colour, data.count, Modifier)
                 i++
             }
 
-            while (i < pieceCount && i < 5) {
-                Piece(pieceColour)
+            while (i < data.count && i < 5) {
+                Piece(data.colour)
                 i++
             }
         }
@@ -70,9 +69,8 @@ fun Point(
 fun PreviewWhitePoint() {
     DominoBackgammonClientTheme {
         Point(
-            pointColour = BGColour.WHITE,
-            pieceColour = BGColour.WHITE,
-            pieceCount = 3
+            BGColour.WHITE,
+            PointData(3, BGColour.WHITE)
         )
     }
 }
@@ -82,8 +80,7 @@ fun PreviewWhitePoint() {
 fun PreviewBlackPoint() {
     DominoBackgammonClientTheme {
         Point(
-            pointColour = BGColour.BLACK,
-            pieceColour = BGColour.WHITE,
-            pieceCount = 6)
+            BGColour.BLACK,
+            PointData(6, BGColour.WHITE))
     }
 }
