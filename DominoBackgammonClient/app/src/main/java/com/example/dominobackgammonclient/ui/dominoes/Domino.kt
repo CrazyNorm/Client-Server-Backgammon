@@ -7,19 +7,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
+// TODO grey out used / unavailable dominoes?
+
 @Composable
 fun Domino(
+    colour: BGColour,
     data: DominoData,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
         DominoSide(
-            colour = data.colour,
-            value = data.side1
+            colour = colour,
+            value = data.side1,
+            Modifier.weight(1f)
         )
         DominoSide(
-            colour = data.colour,
-            value = data.side2
+            colour = colour,
+            value = data.side2,
+            Modifier.weight(1f)
         )
     }
 }
@@ -30,7 +35,8 @@ fun Domino(
 fun PreviewWhiteDomino() {
     DominoBackgammonClientTheme {
         Domino(
-            DominoData(BGColour.WHITE, 2, 1)
+            BGColour.WHITE,
+            DominoData(2, 1)
         )
     }
 }
@@ -40,7 +46,8 @@ fun PreviewWhiteDomino() {
 fun PreviewBlackDomino() {
     DominoBackgammonClientTheme {
         Domino(
-            DominoData(BGColour.BLACK, 6, 4)
+            BGColour.BLACK,
+            DominoData(6, 4)
         )
     }
 }
