@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dominobackgammonclient.ui.common.BGColour
@@ -33,9 +32,8 @@ fun BoardHalf(
                     colour,
                     topData[i],
                     Modifier
-                        .weight(1f)
-                        .rotate(180f)
-                    //TODO numbers are upside down for labelled points on the top row
+                        .weight(1f),
+                    rotate = true
                 )
             }
         }

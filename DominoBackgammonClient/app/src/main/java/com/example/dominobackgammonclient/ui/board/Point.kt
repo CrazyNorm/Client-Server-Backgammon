@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dominobackgammonclient.ui.common.BGColour
@@ -18,21 +19,27 @@ import com.example.dominobackgammonclient.ui.theme.TriangleShape
 fun Point(
     pointColour: BGColour,
     data: PointData?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    rotate: Boolean = false
 ) {
-    if (data == null) Point(pointColour, modifier)
+    if (data == null) {
+        if (rotate) Point(pointColour, modifier.rotate(180f))
+        else Point(pointColour, modifier)
+    }
     else {
         Box(modifier) {
-            Point(pointColour)
+            if (rotate) Point(pointColour, Modifier.rotate(180f))
+            else Point(pointColour)
+
             Column(
-                verticalArrangement = Arrangement.Bottom,
+                verticalArrangement = if (rotate) Arrangement.Top else Arrangement.Bottom,
                 modifier = Modifier
                     .aspectRatio(.18f)
             ) {
                 var i = 0
 
                 if (data.count > 5) {
-                    Piece(data.colour, data.count, Modifier)
+                    if (!rotate) Piece(data.colour, data.count)
                     i++
                 }
 
@@ -40,6 +47,8 @@ fun Point(
                     Piece(data.colour)
                     i++
                 }
+
+                if (rotate && data.count > 5)  Piece(data.colour, data.count)
             }
         }
     }

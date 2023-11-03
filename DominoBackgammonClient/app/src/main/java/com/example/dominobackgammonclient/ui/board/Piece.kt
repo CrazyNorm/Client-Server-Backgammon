@@ -34,14 +34,14 @@ fun Piece(
     modifier: Modifier = Modifier
 ) {
     if (colour == BGColour.WHITE) {
-        LabelPiece(
+        Piece(
             color = Color.White,
             textColor = Color.Black,
             count = count,
             modifier = modifier
         )
     } else {
-        LabelPiece(
+        Piece(
             color = Color.Black,
             textColor = Color.White,
             count = count,
@@ -52,7 +52,7 @@ fun Piece(
 
 
 @Composable
-fun LabelPiece(
+fun Piece(
     color: Color,
     textColor: Color,
     count: Int,
