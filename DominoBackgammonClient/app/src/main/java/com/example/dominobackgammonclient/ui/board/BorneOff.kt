@@ -25,7 +25,11 @@ fun BorneOff(
         modifier = modifier
             .border(3.dp, Color.Gray)
     ) {
-        Box(Modifier.weight(1f - count / 15f))
+        Box(
+            Modifier
+                .weight(1f - count / 15f)
+                .fillMaxHeight()
+        )
         for (i in 1..count) {
             BorneOffPiece(
                 colour,
@@ -61,5 +65,13 @@ fun PreviewWhiteBorneOff() {
 fun PreviewBlackBorneOff() {
     DominoBackgammonClientTheme {
         BorneOff(BGColour.BLACK , 10)
+    }
+}
+
+@Preview(widthDp = 300, heightDp = 50)
+@Composable
+fun PreviewEmptyBorneOff() {
+    DominoBackgammonClientTheme {
+        BorneOff(BGColour.WHITE, 0)
     }
 }
