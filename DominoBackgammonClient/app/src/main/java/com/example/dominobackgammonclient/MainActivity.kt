@@ -52,8 +52,8 @@ class MainActivity : ComponentActivity() {
             )
 
             val wDoubles = listOf(
-                DominoData(6, 6),
-                DominoData(3, 3),
+                DominoData(6, 6, available = false),
+                DominoData(3, 3, available = false),
                 DominoData(1, 1)
             )
             val wHand = listOf(
@@ -68,8 +68,8 @@ class MainActivity : ComponentActivity() {
             )
 
             val bDoubles = listOf(
-                DominoData(5, 5),
-                DominoData(4, 4),
+                DominoData(5, 5, available = false),
+                DominoData(4, 4, available = false),
                 DominoData(2, 2)
             )
             val bHand = listOf(

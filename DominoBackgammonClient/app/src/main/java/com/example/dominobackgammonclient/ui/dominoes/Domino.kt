@@ -1,13 +1,12 @@
 package com.example.dominobackgammonclient.ui.dominoes
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
-
-// TODO grey out used / unavailable dominoes?
 
 @Composable
 fun Domino(
@@ -15,16 +14,16 @@ fun Domino(
     data: DominoData,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier) {
+    Column(modifier.aspectRatio(0.5f)) {
         DominoSide(
             colour = colour,
             value = data.side1,
-            Modifier.weight(1f)
+            modifier = Modifier.weight(1f)
         )
         DominoSide(
             colour = colour,
             value = data.side2,
-            Modifier.weight(1f)
+            modifier = Modifier.weight(1f)
         )
     }
 }

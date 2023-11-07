@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,8 @@ fun DominoList(
         modifier = modifier
     ) {
         items(dominoes) { item ->
-            Domino(colour, item)
+            if (item.available) Domino(colour, item)
+            else Domino(colour, item, Modifier.alpha(0.5f))
         }
     }
 }
@@ -37,8 +39,8 @@ fun DominoList(
 @Composable
 fun PreviewWhiteHand() {
     val doubles = listOf(
-        DominoData(6, 6),
-        DominoData(3, 3),
+        DominoData(6, 6, available = false),
+        DominoData(3, 3, available = false),
         DominoData(1, 1)
     )
     val hand = listOf(
@@ -67,8 +69,8 @@ fun PreviewWhiteHand() {
 @Composable
 fun PreviewBlackHand() {
     val doubles = listOf(
-        DominoData(5, 5),
-        DominoData(4, 4),
+        DominoData(5, 5, available = false),
+        DominoData(4, 4, available = false),
         DominoData(2, 2)
     )
     val hand = listOf(
