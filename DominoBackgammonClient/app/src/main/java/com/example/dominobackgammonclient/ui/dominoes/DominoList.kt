@@ -1,8 +1,7 @@
 package com.example.dominobackgammonclient.ui.dominoes
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -21,15 +20,24 @@ fun DominoList(
     hand: List<DominoData>,
     modifier: Modifier = Modifier
 ) {
-    val dominoes = doubles + hand
+    val dominoes = doubles + listOf(null) + hand
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(5.dp),
         modifier = modifier
     ) {
         items(dominoes) { item ->
-            if (item.available) Domino(colour, item)
-            else Domino(colour, item, Modifier.alpha(0.5f))
+            if (item == null) {
+                Spacer(
+                    Modifier
+                        .width(5.dp)
+                        .fillMaxHeight()
+                        .background(Color.Gray)
+                )
+            } else {
+                if (item.available) Domino(colour, item)
+                else Domino(colour, item, Modifier.alpha(0.5f))
+            }
         }
     }
 }
