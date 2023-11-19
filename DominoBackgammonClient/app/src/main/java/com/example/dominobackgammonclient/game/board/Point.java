@@ -2,18 +2,15 @@ package com.example.dominobackgammonclient.game.board;
 
 
 import com.example.dominobackgammonclient.game.common.Player;
-import com.example.dominobackgammonclient.ui.common.BGColour;
 
 public class Point {
 
-    private final BGColour colour;
     private int count;
     private Player player;
     private PointState state;
 
 
-    public Point(BGColour colour, int count, Player player) {
-        this.colour = colour;
+    public Point(int count, Player player) {
         this.count = count;
         this.player = player;
 
@@ -21,17 +18,12 @@ public class Point {
         this.updateState();
     }
 
-    public Point(BGColour colour) {
-        this.colour = colour;
+    public Point() {
         this.count = 0;
         this.player = null;
         this.state = PointState.Open;
     }
 
-
-    public BGColour getColour() {
-        return colour;
-    }
 
     public int getCount() {
         return count;
