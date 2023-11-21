@@ -40,5 +40,19 @@ public class Domino {
     public boolean isDouble() {
         return (side1 == side2);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        // used for unit tests
+
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Domino domino = (Domino) o;
+
+        if (side1 != domino.side1) return false;
+        if (side2 != domino.side2) return false;
+        return state == domino.state;
+    }
 }
 
