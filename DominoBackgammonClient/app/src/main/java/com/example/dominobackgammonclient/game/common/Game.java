@@ -239,6 +239,17 @@ public class Game {
             }
         }
 
+        // add child for next double if it is available
+        Domino dbl = clientHand.getNextDouble();
+        if (dbl.isAvailable()) {
+            MoveTree dblNode = validMoves.addChild(
+                    new DominoNode(dbl.getSide1(),dbl.getSide2())
+            );
+
+            // expand node with moves for the double
+            expandNode(dblNode, dbl, clientBoard);
+        }
+
         // track lowest movesLeft for each domino
         // remove any moves which have fewer max moves
         // for each node:
@@ -258,7 +269,8 @@ public class Game {
 
     private void expandNode(MoveTree node, Domino domino, Board board) {
         // add children to current node
-        generateDominoMoves(domino, node, board);
+        if (domino.isDouble()) generateDoubleMoves(domino, node, board);
+        else generateDominoMoves(domino, node, board);
 
         // for each non-terminal child
         for (MoveTree child: node.getChildren()) {
