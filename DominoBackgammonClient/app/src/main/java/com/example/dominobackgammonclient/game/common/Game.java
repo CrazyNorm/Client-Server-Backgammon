@@ -6,7 +6,7 @@ import com.example.dominobackgammonclient.game.dominoes.Domino;
 import com.example.dominobackgammonclient.game.dominoes.Hand;
 import com.example.dominobackgammonclient.ui.common.BGColour;
 
-import java.util.Stack;
+import java.util.*;
 
 public class Game {
 
@@ -23,8 +23,8 @@ public class Game {
     private final BGColour clientColour;
     private final BGColour opponentColour;
 
-    private Player currentPlayer;
-    private int turnCount;
+    private final Player currentPlayer;
+    private final int turnCount;
     private final Stack<int[]> turnStack;
     private final Stack<Board> boardStack;
 
@@ -60,11 +60,13 @@ public class Game {
         // returns client board: needed for UI
         return clientBoard;
     }
+
     public Hand getHand(Player player) {
         // returns the given player's entire hand: needed for UI
         if (player == Player.Client) return clientHand;
         else return opponentHand;
     }
+
     public BGColour getColour(Player player) {
         // returns the given player's colour: needed for UI
         if (player == Player.Client) return clientColour;
@@ -190,8 +192,7 @@ public class Game {
         if (player == Player.Client) {
             clientHand.useDomino(side1, side2);
             clientHand.useDouble(val);
-        }
-        else {
+        } else {
             opponentHand.useDomino(side1, side2);
             opponentHand.useDouble(val);
         }
@@ -210,32 +211,22 @@ public class Game {
     }
 
 
+
     public void generateValidMoves() {
-        // generate all valid moves for the client for the current board state
-
-
-
-        // root tree node
-        // add child for each domino
-        // add children for each possible move
-        // if any pieces on bar, only add nodes for entering moves
-        // for each point, check if point + domino is not a closed opponent point
-        // generate temp board with result of applying move
-        // add children for each possible move for remaining move
-        // (repeat for double)
-
         validMoves = new MoveTree();
-
 
         // add child for each usable domino
         for (Domino d : clientHand.getDominoes()) {
             if (d.isAvailable()) {
                 MoveTree domNode = validMoves.addChild(
-                        new DominoNode(d.getSide1(),d.getSide2())
+                        new DominoNode(d.getSide1(), d.getSide2())
                 );
 
                 // expand node with moves for the current domino
                 expandNode(domNode, d, clientBoard);
+
+                // trim node to remove all invalid moves
+                trimNode((DominoNode) domNode);
             }
         }
 
@@ -243,29 +234,20 @@ public class Game {
         Domino dbl = clientHand.getNextDouble();
         if (dbl.isAvailable()) {
             MoveTree dblNode = validMoves.addChild(
-                    new DominoNode(dbl.getSide1(),dbl.getSide2())
+                    new DominoNode(dbl.getSide1(), dbl.getSide2())
             );
 
             // expand node with moves for the double
             expandNode(dblNode, dbl, clientBoard);
+
+            // trim node to remove all invalid moves
+            trimNode((DominoNode) dblNode);
         }
-
-        // track lowest movesLeft for each domino
-        // remove any moves which have fewer max moves
-        // for each node:
-        // if movesLeft < minWastedMoves and this node has no children
-        // then remove this node (remove from parent's children)
-        // depth first: see notes
-
-        // also remove any nodes where total distance > domino total
-
-        // if domino is not double & wasted moves > 0:
-        // search through moves to find max move distance
-        // search through moves again to remove moves where distance < max
 
         validMoves.print();
 
     }
+
 
     private void expandNode(MoveTree node, Domino domino, Board board) {
         // add children to current node
@@ -290,6 +272,14 @@ public class Game {
 
     private void generateDominoMoves(Domino domino, MoveTree parent, Board board) {
         // adds child nodes to a node with all valid moves from the given board state
+        int moves = parent.getMovesLeft() - 1;
+        int dist = 0;
+
+        // if possible, add the parent's distance to the current distance
+        try {
+            dist += ((MoveNode) parent).getDistance();
+        } catch (Exception ignored) {
+        }
 
         // if any pieces on bar, then only add moves which enter
         if (board.getBarCount(Player.Client) > 0) {
@@ -299,7 +289,8 @@ public class Game {
                 parent.addChild(new MoveNode(
                         25,
                         25 - domino.getSide1(),
-                        parent.getMovesLeft() - 1)
+                        dist,
+                        moves)
                 );
             // check if it's available to enter using side 2
             Point s2EnterPoint = board.getPoint(25 - domino.getSide2());
@@ -307,7 +298,8 @@ public class Game {
                 parent.addChild(new MoveNode(
                         25,
                         25 - domino.getSide2(),
-                        parent.getMovesLeft() - 1)
+                        dist,
+                        moves)
                 );
         }
 
@@ -331,7 +323,8 @@ public class Game {
                     parent.addChild(new MoveNode(
                             i,
                             0,
-                            parent.getMovesLeft() - 1)
+                            dist,
+                            moves)
                     );
                 // everything higher already borne off: side 1
                 if (i < domino.getSide1())
@@ -341,7 +334,8 @@ public class Game {
                                 i,
                                 0,
                                 domino.getSide1(),
-                                parent.getMovesLeft() - 1)
+                                dist,
+                                moves)
                         );
                 // everything higher already borne off: side 2
                 if (i < domino.getSide2())
@@ -350,7 +344,8 @@ public class Game {
                                 i,
                                 0,
                                 domino.getSide2(),
-                                parent.getMovesLeft() - 1)
+                                dist,
+                                moves)
                         );
             }
 
@@ -361,7 +356,8 @@ public class Game {
                     parent.addChild(new MoveNode(
                             i,
                             i - domino.getSide1(),
-                            parent.getMovesLeft() - 1)
+                            dist,
+                            moves)
                     );
             }
             // regular moves: side 2
@@ -371,7 +367,8 @@ public class Game {
                     parent.addChild(new MoveNode(
                             i,
                             i - domino.getSide2(),
-                            parent.getMovesLeft() - 1)
+                            dist,
+                            moves)
                     );
             }
         }
@@ -380,6 +377,8 @@ public class Game {
     private void generateDoubleMoves(Domino domino, MoveTree parent, Board board) {
         // adds child nodes to a domino node with all valid moves from the given board state
         // only checks one sde of the domino to avoid duplicates for doubles
+        int moves = parent.getMovesLeft() - 1;
+        int dist = 0;
 
         // if any pieces on bar, then only add moves which enter
         if (board.getBarCount(Player.Client) > 0) {
@@ -389,7 +388,8 @@ public class Game {
                 parent.addChild(new MoveNode(
                         25,
                         25 - domino.getSide1(),
-                        parent.getMovesLeft() - 1)
+                        dist,
+                        moves)
                 );
         }
 
@@ -413,7 +413,8 @@ public class Game {
                     parent.addChild(new MoveNode(
                             i,
                             0,
-                            parent.getMovesLeft() - 1)
+                            dist,
+                            moves)
                     );
                 // everything higher already borne off
                 if (i < domino.getSide1())
@@ -423,7 +424,7 @@ public class Game {
                                 i,
                                 0,
                                 domino.getSide1(),
-                                parent.getMovesLeft() - 1)
+                                moves)
                         );
             }
 
@@ -434,10 +435,93 @@ public class Game {
                     parent.addChild(new MoveNode(
                             i,
                             i - domino.getSide1(),
-                            parent.getMovesLeft() - 1)
+                            dist,
+                            moves)
                     );
             }
         }
     }
-}
 
+
+    private void trimNode(DominoNode node) {
+        // removes all nodes that don't lead to a terminal with the correct total distance
+        // total distance is only correct if correct no. of moves are made
+        // AND correct domino sides are used (i.e. each side used at most once, largest possible side used)
+        List<Integer> targets;
+
+        // for a non-double, there are only 4 acceptable target distances that use each side at most once:
+        // domino total, larger side, smaller side, or 0
+        if (node.getSide1() != node.getSide2()) {
+            targets = Arrays.asList(
+                    (node.getSide1() + node.getSide2()),
+                    Math.max(node.getSide1(), node.getSide2()),
+                    Math.min(node.getSide1(), node.getSide2()),
+                    0
+            );
+        }
+
+        // for a double, there are 5 acceptable total distances:
+        // domino total, double val x 3, double val x 2, double val x 1, or 0
+        else {
+            targets = Arrays.asList(
+                    (node.getSide1() * 4),
+                    (node.getSide1() * 3),
+                    (node.getSide1() * 2),
+                    (int)node.getSide1(),
+                    0
+            );
+        }
+
+        // remove nodes whose distance is none of the acceptable targets
+        trimNode(node, targets);
+
+        // find the largest total distance from the remaining nodes
+        int target = largestDistance(node);
+        // remove the rest of the nodes that don't have the optimal distance
+        trimNode(node, Collections.singletonList(target));
+    }
+
+    private boolean trimNode(MoveTree node, List<Integer> targetDists) {
+        // removes invalid moves
+
+        // trim all children of the current node
+        ArrayList<MoveTree> toTrim = new ArrayList<>();
+        for (MoveTree child : node.getChildren())
+            if (trimNode(child, targetDists))
+                toTrim.add(child);
+        node.getChildren().removeAll(toTrim);
+
+        // the current node can only be removed if it now has no children
+        if (node.getChildren().isEmpty()) {
+            // remove node if total distance is not a valid target distance
+            try {
+                int dist = ((MoveNode) node).getDistance();
+                return !targetDists.contains(dist);
+            } catch (Exception ignored) {
+                // Exception just means this node is a domino node
+                // i.e. doesn't have a distance property
+            }
+        }
+        return false;
+    }
+
+    private int largestDistance(MoveTree node) {
+        // recursive depth-first search for max terminal value
+
+        // if node has no children, return node's distance
+        if (node.getChildren().isEmpty())
+            try {
+                return ((MoveNode) node).getDistance();
+            } catch (Exception ignored) {
+                // ignored exception just means a domino node has no children
+            }
+
+        int maxDist = 0;
+        // finds the largest distance from all children of this node
+        for (MoveTree child: node.getChildren()) {
+            int dist = largestDistance(child);
+            maxDist = Math.max(maxDist, dist);
+        }
+        return maxDist;
+    }
+}

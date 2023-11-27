@@ -57,11 +57,6 @@ class DominoNode extends MoveTree {
     public byte getSide2() {
         return side2;
     }
-    public int getTotal() {
-        int t = side1 + side2;
-        if (side1 == side2) return t * 2;
-        else return t;
-    }
 
     public Domino getDomino() {
         return new Domino(side1, side2);
@@ -79,17 +74,17 @@ class MoveNode extends MoveTree {
     private final byte end;
     private final byte dist;
 
-    public MoveNode(int start, int end, int movesLeft) {
+    public MoveNode(int start, int end, int curDist, int movesLeft) {
         this.start = (byte)start;
         this.end = (byte)end;
-        this.dist = (byte)(start - end);
+        this.dist = (byte)(curDist + start - end);
         this.movesLeft = (byte)movesLeft;
     }
 
-    public MoveNode(int start, int end, int dist, int movesLeft) {
+    public MoveNode(int start, int end, int dist, int curDist, int movesLeft) {
         this.start = (byte)start;
         this.end = (byte)end;
-        this.dist = (byte)dist;
+        this.dist = (byte)(curDist + dist);
         this.movesLeft = (byte)movesLeft;
     }
 
