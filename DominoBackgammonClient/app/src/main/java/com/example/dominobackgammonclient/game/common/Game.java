@@ -2,6 +2,7 @@ package com.example.dominobackgammonclient.game.common;
 
 import com.example.dominobackgammonclient.game.board.Board;
 import com.example.dominobackgammonclient.game.board.Point;
+import com.example.dominobackgammonclient.game.dominoes.Domino;
 import com.example.dominobackgammonclient.game.dominoes.Hand;
 import com.example.dominobackgammonclient.ui.common.BGColour;
 
@@ -27,7 +28,7 @@ public class Game {
     private final Stack<int[]> turnStack;
     private final Stack<Board> boardStack;
 
-//    private MoveTree validMoves;
+    private MoveTree validMoves;
     private int[] highlightedMoves;
     private int selectedPoint;
 
@@ -211,6 +212,220 @@ public class Game {
 
     public void generateValidMoves() {
         // generate all valid moves for the client for the current board state
+
+
+
+        // root tree node
+        // add child for each domino
+        // add children for each possible move
+        // if any pieces on bar, only add nodes for entering moves
+        // for each point, check if point + domino is not a closed opponent point
+        // generate temp board with result of applying move
+        // add children for each possible move for remaining move
+        // (repeat for double)
+
+        validMoves = new MoveTree();
+
+
+        // add child for each usable domino
+        for (Domino d : clientHand.getDominoes()) {
+            if (d.isAvailable()) {
+                MoveTree domNode = validMoves.addChild(
+                        new DominoNode(d.getSide1(),d.getSide2())
+                );
+
+                // expand node with moves for the current domino
+                expandNode(domNode, d, clientBoard);
+            }
+        }
+
+        // track lowest movesLeft for each domino
+        // remove any moves which have fewer max moves
+        // for each node:
+        // if movesLeft < minWastedMoves and this node has no children
+        // then remove this node (remove from parent's children)
+        // depth first: see notes
+
+        // also remove any nodes where total distance > domino total
+
+        // if domino is not double & wasted moves > 0:
+        // search through moves to find max move distance
+        // search through moves again to remove moves where distance < max
+
+        validMoves.print();
+
+    }
+
+    private void expandNode(MoveTree node, Domino domino, Board board) {
+        // add children to current node
+        generateDominoMoves(domino, node, board);
+
+        // for each non-terminal child
+        for (MoveTree child: node.getChildren()) {
+            if (child.getMovesLeft() > 0) {
+                // generate board after applying current child's move
+                Board tempBoard = new Board(board);
+                tempBoard.movePiece(
+                        ((MoveNode)child).getStart(),
+                        ((MoveNode)child).getEnd(),
+                        Player.Client
+                );
+                // expand the child with the new board state
+                expandNode(child, domino, tempBoard);
+            }
+        }
+    }
+
+    private void generateDominoMoves(Domino domino, MoveTree parent, Board board) {
+        // adds child nodes to a node with all valid moves from the given board state
+
+        // if any pieces on bar, then only add moves which enter
+        if (board.getBarCount(Player.Client) > 0) {
+            // check if it's available to enter using side 1
+            Point s1EnterPoint = board.getPoint(25 - domino.getSide1());
+            if (s1EnterPoint.availableFor(Player.Client))
+                parent.addChild(new MoveNode(
+                        25,
+                        25 - domino.getSide1(),
+                        parent.getMovesLeft() - 1)
+                );
+            // check if it's available to enter using side 2
+            Point s2EnterPoint = board.getPoint(25 - domino.getSide2());
+            if (s2EnterPoint.availableFor(Player.Client))
+                parent.addChild(new MoveNode(
+                        25,
+                        25 - domino.getSide2(),
+                        parent.getMovesLeft() - 1)
+                );
+        }
+
+        // track the highest point with at least 1 piece (used for bearing off)
+        int highestPoint = 0;
+        // for each point, add possible move nodes starting from that point
+        for (int i = 24; i > 0; i--) {
+            // check there is a piece to move from this point
+            if (board.getPoint(i).getPlayer() != Player.Client) continue;
+
+            // update highest point
+            if (i > highestPoint) highestPoint = i;
+
+            // don't include back men before turn 4
+            if (i == 24 && turnCount < 4) continue;
+
+            // check bearing off
+            if (i < 6) {
+                // exact bear off
+                if (i == domino.getSide1() || i == domino.getSide2())
+                    parent.addChild(new MoveNode(
+                            i,
+                            0,
+                            parent.getMovesLeft() - 1)
+                    );
+                // everything higher already borne off: side 1
+                if (i < domino.getSide1())
+                    // specify a distance for these nodes as domino side is not the same as start - end
+                    if (i == highestPoint)
+                        parent.addChild(new MoveNode(
+                                i,
+                                0,
+                                domino.getSide1(),
+                                parent.getMovesLeft() - 1)
+                        );
+                // everything higher already borne off: side 2
+                if (i < domino.getSide2())
+                    if (i == highestPoint)
+                        parent.addChild(new MoveNode(
+                                i,
+                                0,
+                                domino.getSide2(),
+                                parent.getMovesLeft() - 1)
+                        );
+            }
+
+            // regular moves: side 1
+            if (i > domino.getSide1()) {
+                Point s1EndPoint = board.getPoint(i - domino.getSide1());
+                if (s1EndPoint.availableFor(Player.Client))
+                    parent.addChild(new MoveNode(
+                            i,
+                            i - domino.getSide1(),
+                            parent.getMovesLeft() - 1)
+                    );
+            }
+            // regular moves: side 2
+            if (i > domino.getSide2()) {
+                Point s2EndPoint = board.getPoint(i - domino.getSide2());
+                if (s2EndPoint.availableFor(Player.Client))
+                    parent.addChild(new MoveNode(
+                            i,
+                            i - domino.getSide2(),
+                            parent.getMovesLeft() - 1)
+                    );
+            }
+        }
+    }
+
+    private void generateDoubleMoves(Domino domino, MoveTree parent, Board board) {
+        // adds child nodes to a domino node with all valid moves from the given board state
+        // only checks one sde of the domino to avoid duplicates for doubles
+
+        // if any pieces on bar, then only add moves which enter
+        if (board.getBarCount(Player.Client) > 0) {
+            // check if it's available to enter
+            Point s1EnterPoint = board.getPoint(25 - domino.getSide1());
+            if (s1EnterPoint.availableFor(Player.Client))
+                parent.addChild(new MoveNode(
+                        25,
+                        25 - domino.getSide1(),
+                        parent.getMovesLeft() - 1)
+                );
+        }
+
+        // track the highest point with at least 1 piece (used for bearing off)
+        int highestPoint = 0;
+        // for each point, add possible move nodes starting from that point
+        for (int i = 24; i > 0; i--) {
+            // check there is a piece to move from this point
+            if (board.getPoint(i).getPlayer() != Player.Client) continue;
+
+            // update highest point
+            if (i > highestPoint) highestPoint = i;
+
+            // don't include back men before turn 4
+            if (i == 24 && turnCount < 4) continue;
+
+            // check bearing off
+            if (i < 6) {
+                // exact bear off
+                if (i == domino.getSide1())
+                    parent.addChild(new MoveNode(
+                            i,
+                            0,
+                            parent.getMovesLeft() - 1)
+                    );
+                // everything higher already borne off
+                if (i < domino.getSide1())
+                    // specify a distance for these nodes as domino side is not the same as start - end
+                    if (i == highestPoint)
+                        parent.addChild(new MoveNode(
+                                i,
+                                0,
+                                domino.getSide1(),
+                                parent.getMovesLeft() - 1)
+                        );
+            }
+
+            // regular moves
+            if (i > domino.getSide1()) {
+                Point endPoint = board.getPoint(i - domino.getSide1());
+                if (endPoint.availableFor(Player.Client))
+                    parent.addChild(new MoveNode(
+                            i,
+                            i - domino.getSide1(),
+                            parent.getMovesLeft() - 1)
+                    );
+            }
+        }
     }
 }
 

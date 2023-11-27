@@ -66,4 +66,12 @@ public class Point {
             this.state = PointState.Open;
         }
     }
+
+    public boolean availableFor(Player player) {
+        // returns whether the point is available for the given player to move to
+        // i.e. not closed by the other player
+        if (isOpen()) return true;
+        if (isBlot()) return true;
+        return (this.player == player);
+    }
 }

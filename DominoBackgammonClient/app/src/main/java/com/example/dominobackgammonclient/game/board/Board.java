@@ -78,6 +78,22 @@ public class Board {
         updatePipCount();
     }
 
+    public Board(Board copy) {
+        // copy constructor to clone board objects
+
+        this.points = new Point[POINT_COUNT];
+        // copy points value-wise
+        for (int i = 0; i < POINT_COUNT; i++) {
+            Point toCopy = copy.points[i];
+            this.points[i] = new Point(toCopy.getCount(), toCopy.getPlayer());
+        }
+
+        // clone counter arrays
+        this.offBoard = copy.offBoard.clone();
+        this.bar = copy.bar.clone();
+        this.pipCounts = copy.pipCounts.clone();
+    }
+
 
     public Point getPoint(int p) {
         return points[p - 1];
