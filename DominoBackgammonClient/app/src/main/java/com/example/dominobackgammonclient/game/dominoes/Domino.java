@@ -30,6 +30,9 @@ public class Domino {
     public boolean isUsed() {
         return (state == DominoState.Used);
     }
+    public boolean isBlocked() {
+        return (state == DominoState.Blocked);
+    }
     public void select() {
         state = DominoState.Selected;
     }
@@ -38,6 +41,12 @@ public class Domino {
     }
     public void use() {
         state = DominoState.Used;
+    }
+    public void block() {
+        state = DominoState.Blocked;
+    }
+    public void unblock() {
+        state = DominoState.Available;
     }
 
     public boolean isDouble() {

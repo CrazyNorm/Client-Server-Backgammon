@@ -6,19 +6,31 @@ public class Hand {
     private final Domino[] doubles;
     private int nextDouble;
     private int dominoSet;
+    private boolean swapped;
 
 
     public Hand(int set) {
         this.dominoes = DominoSet.getSet(set);
         this.doubles = DominoSet.getDoubles(set);
+        // block doubles until 1st swap
+        for (Domino dbl: doubles)
+            dbl.block();
 
         this.nextDouble = 0;
         this.dominoSet = set;
+        this.swapped = false;
     }
 
 
     public Domino[] getDominoes() {
         return dominoes;
+    }
+    public boolean isDominoAvailable(int side1, int side2) {
+        int index = findDomino(side1, side2);
+        if (index != -1) {
+            return (dominoes[index].isAvailable() || dominoes[index].isSelected());
+        }
+        return false;
     }
     public Domino selectDomino(int side1, int side2) {
         int index = findDomino(side1, side2);
@@ -39,6 +51,11 @@ public class Hand {
         this.dominoSet = 3 - this.dominoSet;
         // reinitialize dominoes (not doubles)
         this.dominoes = DominoSet.getSet(this.dominoSet);
+        // unblock 1st double on 1st swap
+        if (!swapped) {
+            swapped = true;
+            getNextDouble().unblock();
+        }
     }
 
     private int findDomino(int side1, int side2) {
@@ -59,6 +76,13 @@ public class Hand {
     public Domino[] getDoubles() {
         return doubles;
     }
+    public boolean isDoubleAvailable(int val) {
+        int index = findDouble(val);
+        if (index != -1) {
+            return (doubles[index].isAvailable() || doubles[index].isSelected());
+        }
+        return false;
+    }
     public Domino getNextDouble() {
         return doubles[nextDouble];
     }
@@ -67,6 +91,10 @@ public class Hand {
         if (index != -1) {
             doubles[index].use();
             nextDouble++;
+
+            // unblock next double
+            if (nextDouble < 3)
+                getNextDouble().unblock();
         }
     }
     public Domino selectDouble(int val) {

@@ -185,6 +185,7 @@ public class Game {
 
         if (side1 == side2) selectDomino(side1);
         else {
+            if (!clientHand.isDominoAvailable(side1,side2)) return;
             if (selectedDomino != null) {
                 selectedDomino.deselect();
                 // if domino was previously selected, just deselect it
@@ -200,6 +201,7 @@ public class Game {
         // deselects previous double & selects new double
 
         if (selectedDouble != null) {
+            if (!clientHand.isDoubleAvailable(val)) return;
             selectedDouble.deselect();
             // if domino was previously selected, just deselect it
             if (selectedDouble.getSide1() != val)
