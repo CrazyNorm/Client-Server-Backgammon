@@ -31,6 +31,8 @@ public class Game {
     private MoveTree validMoves;
     private int[] highlightedMoves;
     private int selectedPoint;
+    private Domino selectedDomino;
+    private Domino selectedDouble;
 
 
     public Game(BGColour clientColour) {
@@ -177,6 +179,35 @@ public class Game {
         serverBoard.enterPiece(end, player);
     }
 
+
+    public void selectDomino(int side1, int side2) {
+        // deselects previous domino & selects new domino
+
+        if (side1 == side2) selectDomino(side1);
+        else {
+            if (selectedDomino != null) {
+                selectedDomino.deselect();
+                // if domino was previously selected, just deselect it
+                if (!(selectedDomino.getSide1() == side1 && selectedDomino.getSide2() == side2))
+                    selectedDomino = clientHand.selectDomino(side1, side2);
+            } else {
+                selectedDomino = clientHand.selectDomino(side1, side2);
+            }
+        }
+    }
+
+    public void selectDomino(int val) {
+        // deselects previous double & selects new double
+
+        if (selectedDouble != null) {
+            selectedDouble.deselect();
+            // if domino was previously selected, just deselect it
+            if (selectedDouble.getSide1() != val)
+                selectedDouble = clientHand.selectDouble(val);
+        } else {
+            selectedDouble = clientHand.selectDouble(val);
+        }
+    }
 
     public void useDomino(int side1, int side2, Player player) {
         // marks domino as used according to server instruction

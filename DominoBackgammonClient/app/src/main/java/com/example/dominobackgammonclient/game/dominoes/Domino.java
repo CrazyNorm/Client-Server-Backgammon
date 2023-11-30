@@ -33,6 +33,9 @@ public class Domino {
     public void select() {
         state = DominoState.Selected;
     }
+    public void deselect() {
+        state = DominoState.Available;
+    }
     public void use() {
         state = DominoState.Used;
     }

@@ -20,6 +20,14 @@ public class Hand {
     public Domino[] getDominoes() {
         return dominoes;
     }
+    public Domino selectDomino(int side1, int side2) {
+        int index = findDomino(side1, side2);
+        if (index != -1) {
+            dominoes[index].select();
+            return dominoes[index];
+        }
+        return null;
+    }
     public void useDomino(int side1, int side2) {
         int index = findDomino(side1, side2);
         if (index != -1) {
@@ -60,6 +68,14 @@ public class Hand {
             doubles[index].use();
             nextDouble++;
         }
+    }
+    public Domino selectDouble(int val) {
+        int index = findDouble(val);
+        if (index != -1) {
+            doubles[index].select();
+            return doubles[index];
+        }
+        return null;
     }
 
     private int findDouble(int val) {
