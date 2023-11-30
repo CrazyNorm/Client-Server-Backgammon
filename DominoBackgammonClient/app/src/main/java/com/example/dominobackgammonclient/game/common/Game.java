@@ -29,8 +29,8 @@ public class Game {
     private final Stack<Board> boardStack;
 
     private MoveTree validMoves;
-    private int[] highlightedMoves;
-    private int selectedPoint;
+    private List<Integer> highlightedMoves;
+    private int selectedPoint = -1;
     private Domino selectedDomino;
     private Domino selectedDouble;
 
@@ -81,6 +81,8 @@ public class Game {
         turnStack.pop();
         // restores board to previous state
         this.clientBoard = boardStack.pop();
+        // deselects any selected point
+        selectedPoint = -1;
     }
 
     public void endTurn() {
@@ -96,12 +98,25 @@ public class Game {
 
 
     public void selectPiece(int point) {
-        this.selectedPoint = point;
+        // if no point selected, select the point
+        if (selectedPoint == -1) selectedPoint = point;
+        // if this point already selected, deselect it
+        else if (selectedPoint == point) selectedPoint = -1;
+        // if another point is selected, move selected piece
+        else makeClientMove(point);
+
+        updateHighlightedMoves();
     }
 
     public void makeClientMove(int end) {
         // moves the selected piece to the given end position
         // moving player is always client
+
+        // check a piece is selected to move from
+        if (selectedPoint == -1) return;
+
+        // check the end point is valid
+        if (!highlightedMoves.contains(end)) return;
 
         // add move to turn stack
         turnStack.push(new int[]{selectedPoint, end});
@@ -111,6 +126,10 @@ public class Game {
         if (end == 0) bearOffClient();
         else if (selectedPoint == 25) enterClient(end);
         else moveClient(end);
+
+        // update highlighted points
+        updateHighlightedMoves();
+        selectedPoint = -1;
     }
 
     private void moveClient(int end) {
@@ -195,6 +214,9 @@ public class Game {
                 selectedDomino = clientHand.selectDomino(side1, side2);
             }
         }
+
+        updateHighlightedMoves();
+        selectedPoint = -1;
     }
 
     public void selectDomino(int val) {
@@ -247,6 +269,7 @@ public class Game {
 
     public void generateValidMoves() {
         validMoves = new MoveTree();
+        highlightedMoves = new ArrayList<>();
 
         // add child for each usable domino
         for (Domino d : clientHand.getDominoes()) {
@@ -279,6 +302,56 @@ public class Game {
 
         validMoves.print();
 
+    }
+
+    private void updateHighlightedMoves() {
+        highlightedMoves.clear();
+
+        // if no domino selected, highlight nothing
+        if (selectedDomino == null) return;
+
+        // get domino tree node (double takes priority)
+        Domino targetDomino;
+        if (selectedDouble != null) targetDomino = selectedDouble;
+        else targetDomino = selectedDouble;
+
+        MoveTree currentNode = validMoves;
+        for (MoveTree child: currentNode.getChildren()) {
+            DominoNode d = (DominoNode)child;
+            if (d.getSide1() == targetDomino.getSide1() && d.getSide2() == targetDomino.getSide2()) {
+                currentNode = child;
+                break;
+            }
+        }
+
+        // traverse the turn stack to get to current state
+        List<int[]> turnList = new ArrayList<>(turnStack);
+        for (int[] turn: turnList) {
+            for (MoveTree child: currentNode.getChildren()) {
+                MoveNode m = (MoveNode)child;
+                if (m.getStart() == turn[0] && m.getEnd() == turn[1]) {
+                    currentNode = child;
+                    break;
+                }
+            }
+        }
+
+        // if no point is selected, then highlight start points
+        if (selectedPoint == -1) {
+            for (MoveTree child: currentNode.getChildren()) {
+                MoveNode m = (MoveNode)child;
+                highlightedMoves.add((int) m.getStart());
+            }
+        }
+        // if a point is selected, then highlight all end points that start from the selected point
+        // if no point is selected, then highlight start points
+        else {
+            for (MoveTree child: currentNode.getChildren()) {
+                MoveNode m = (MoveNode)child;
+                if (m.getStart() == selectedPoint)
+                    highlightedMoves.add((int) m.getEnd());
+            }
+        }
     }
 
 
