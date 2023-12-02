@@ -5,13 +5,14 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.dominobackgammonclient.game.dominoes.Domino
 import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
 fun Domino(
     colour: BGColour,
-    data: DominoData,
+    data: Domino,
     modifier: Modifier = Modifier
 ) {
     Column(modifier.aspectRatio(0.5f)) {
@@ -35,7 +36,7 @@ fun PreviewWhiteDomino() {
     DominoBackgammonClientTheme {
         Domino(
             BGColour.WHITE,
-            DominoData(2, 1)
+            Domino(2, 1)
         )
     }
 }
@@ -46,7 +47,7 @@ fun PreviewBlackDomino() {
     DominoBackgammonClientTheme {
         Domino(
             BGColour.BLACK,
-            DominoData(6, 4)
+            Domino(6, 4)
         )
     }
 }

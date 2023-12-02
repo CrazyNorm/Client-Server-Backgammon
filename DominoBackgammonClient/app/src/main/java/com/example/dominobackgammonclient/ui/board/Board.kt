@@ -9,8 +9,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.dominobackgammonclient.game.board.Board
+import com.example.dominobackgammonclient.game.common.Player
 import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
+
+@Composable
+fun Board(
+    board: Board,
+    client: BGColour,
+    opponent: BGColour,
+    modifier: Modifier = Modifier
+) {
+    val pointsData = mutableListOf<PointData?>()
+    for (p in 1..24) {
+        val point = board.getPoint(p)
+
+        val data = when (point.player) {
+            null -> null
+            Player.Client -> PointData(point.count, client)
+            Player.Opponent -> PointData(point.count, opponent)
+        }
+
+        pointsData.add(data)
+    }
+
+    val barData = arrayOf(board.getBarCount(Player.Client), board.getBarCount(Player.Opponent))
+
+    Board(pointsData, barData, modifier)
+}
 
 @Composable
 fun Board(
