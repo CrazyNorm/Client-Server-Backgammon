@@ -19,19 +19,20 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 fun DominoSide(
     colour: BGColour,
     value: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isUsed: Boolean = false
 ) {
     if (colour == BGColour.WHITE) {
         DominoSide(
             color = Color.White,
-            textColor = Color.Black,
+            textColor = if (isUsed) Color.Red else Color.Black,
             value = value,
             modifier = modifier
         )
     } else {
         DominoSide(
             color = Color.Black,
-            textColor = Color.White,
+            textColor = if (isUsed) Color.Red else Color.White,
             value = value,
             modifier = modifier
         )

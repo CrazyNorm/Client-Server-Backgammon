@@ -32,6 +32,7 @@ fun BGScreen(
         DominoList(
             colour = gameState.getColour(Player.Opponent),
             hand = gameState.getHand(Player.Opponent),
+            onClick = { _,_ -> /* Do nothing for opponent hand */ },
             modifier = Modifier.weight(.2f)
         )
 
@@ -65,6 +66,7 @@ fun BGScreen(
         DominoList(
             colour = gameState.getColour(Player.Client),
             hand = gameState.getHand(Player.Client),
+            onClick = { s1, s2 -> bgViewModel.selectDomino(s1, s2) },
             modifier = Modifier.weight(.2f)
         )
     }

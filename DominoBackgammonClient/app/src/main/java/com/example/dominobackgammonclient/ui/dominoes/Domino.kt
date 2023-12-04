@@ -1,5 +1,6 @@
 package com.example.dominobackgammonclient.ui.dominoes
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
@@ -13,17 +14,23 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 fun Domino(
     colour: BGColour,
     data: Domino,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier.aspectRatio(0.5f)) {
+    Column(modifier
+        .aspectRatio(0.5f)
+        .clickable { onClick() }
+    ) {
         DominoSide(
             colour = colour,
             value = data.side1,
+            isUsed = data.isUsed,
             modifier = Modifier.weight(1f)
         )
         DominoSide(
             colour = colour,
             value = data.side2,
+            isUsed = data.isUsed,
             modifier = Modifier.weight(1f)
         )
     }
@@ -36,7 +43,8 @@ fun PreviewWhiteDomino() {
     DominoBackgammonClientTheme {
         Domino(
             BGColour.WHITE,
-            Domino(2, 1)
+            Domino(2, 1),
+            { }
         )
     }
 }
@@ -47,7 +55,8 @@ fun PreviewBlackDomino() {
     DominoBackgammonClientTheme {
         Domino(
             BGColour.BLACK,
-            Domino(6, 4)
+            Domino(6, 4),
+            { }
         )
     }
 }

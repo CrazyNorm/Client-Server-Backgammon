@@ -58,6 +58,30 @@ public class Game {
     }
 
 
+    public Game(Game oldGame) {
+        // shallow copy constructor
+
+        this.serverBoard = oldGame.serverBoard;
+        this.clientBoard = oldGame.clientBoard;
+
+        this.clientHand = oldGame.clientHand;
+        this.clientColour = oldGame.clientColour;
+        this.opponentHand = oldGame.opponentHand;
+        this.opponentColour = oldGame.opponentColour;
+
+        this.currentPlayer = oldGame.currentPlayer;
+        this.turnCount = oldGame.turnCount;
+        this.turnStack = oldGame.turnStack;
+        this.boardStack = oldGame.boardStack;
+
+        this.validMoves = oldGame.validMoves;
+        this.highlightedMoves = oldGame.highlightedMoves;
+        this.selectedPoint = oldGame.selectedPoint;
+        this.selectedDomino = oldGame.selectedDomino;
+        this.selectedDouble = oldGame.selectedDouble;
+    }
+
+
     public Board getBoard() {
         // returns client board: needed for UI
         return clientBoard;
@@ -73,6 +97,10 @@ public class Game {
         // returns the given player's colour: needed for UI
         if (player == Player.Client) return clientColour;
         else return opponentColour;
+    }
+
+    public List<Integer> getHighlightedMoves() {
+        return highlightedMoves;
     }
 
 
@@ -210,24 +238,26 @@ public class Game {
                 // if domino was previously selected, just deselect it
                 if (!(selectedDomino.getSide1() == side1 && selectedDomino.getSide2() == side2))
                     selectedDomino = clientHand.selectDomino(side1, side2);
+                else selectedDomino = null;
             } else {
                 selectedDomino = clientHand.selectDomino(side1, side2);
             }
         }
 
-        updateHighlightedMoves();
         selectedPoint = -1;
+        updateHighlightedMoves();
     }
 
     public void selectDomino(int val) {
         // deselects previous double & selects new double
 
+        if (!clientHand.isDoubleAvailable(val)) return;
         if (selectedDouble != null) {
-            if (!clientHand.isDoubleAvailable(val)) return;
             selectedDouble.deselect();
             // if domino was previously selected, just deselect it
             if (selectedDouble.getSide1() != val)
                 selectedDouble = clientHand.selectDouble(val);
+            else selectedDouble = null;
         } else {
             selectedDouble = clientHand.selectDouble(val);
         }
@@ -300,20 +330,17 @@ public class Game {
             trimNode((DominoNode) dblNode);
         }
 
-        validMoves.print();
-
+//        validMoves.print();
     }
 
     private void updateHighlightedMoves() {
         highlightedMoves.clear();
 
-        // if no domino selected, highlight nothing
-        if (selectedDomino == null) return;
-
         // get domino tree node (double takes priority)
         Domino targetDomino;
         if (selectedDouble != null) targetDomino = selectedDouble;
-        else targetDomino = selectedDouble;
+        else if (selectedDomino != null) targetDomino = selectedDomino;
+        else return;
 
         MoveTree currentNode = validMoves;
         for (MoveTree child: currentNode.getChildren()) {
@@ -352,6 +379,8 @@ public class Game {
                     highlightedMoves.add((int) m.getEnd());
             }
         }
+
+//        System.out.println(highlightedMoves);
     }
 
 
