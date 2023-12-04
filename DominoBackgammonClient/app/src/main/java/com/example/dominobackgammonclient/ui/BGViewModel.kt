@@ -23,6 +23,12 @@ class BGViewModel : ViewModel() {
         _gameState.update { tempGame }
     }
 
+    fun selectPiece(point: Int) {
+        val tempGame = Game(_gameState.value)
+        tempGame.selectPiece(point)
+        _gameState.update { tempGame }
+    }
+
     init {
         // for test demonstration purposes: remove!
         _gameState.value.useDomino(6, 4, Player.Client)

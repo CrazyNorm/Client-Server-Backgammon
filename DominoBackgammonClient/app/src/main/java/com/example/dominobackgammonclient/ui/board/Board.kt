@@ -19,38 +19,49 @@ fun Board(
     board: Board,
     client: BGColour,
     opponent: BGColour,
-    modifier: Modifier = Modifier
+    onClickPoint: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    highlightedPoints: List<Int> = emptyList(),
+    highlightedPieces: List<Int> = emptyList()
 ) {
-    val pointsData = mutableListOf<PointData?>()
+    val pointsData = mutableListOf<PointData>()
     for (p in 1..24) {
         val point = board.getPoint(p)
 
         val data = when (point.player) {
-            null -> null
+            null -> PointData(0)
             Player.Client -> PointData(point.count, client)
             Player.Opponent -> PointData(point.count, opponent)
         }
+
+        if (highlightedPoints.contains(p)) data.pointSelected = true
+        if (highlightedPieces.contains(p)) data.pieceSelected = true
 
         pointsData.add(data)
     }
 
     val barData = arrayOf(board.getBarCount(Player.Client), board.getBarCount(Player.Opponent))
 
-    Board(pointsData, barData, modifier)
+    Board(pointsData, barData, onClickPoint, modifier)
 }
 
 @Composable
 fun Board(
-    data: List<PointData?>,
+    data: List<PointData>,
     bar: Array<Int>,
+    onClickPoint: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val chunkedData = data.chunked(6)
+    val chunkedIndices = listOf((6 downTo 1), (12 downTo 7), (13..18), (19..24))
     val pointWeight = 1f / 14f
     Row(modifier) {
         BoardHalf(
             chunkedData[2],
+            chunkedIndices[2].toList(),
             chunkedData[1],
+            chunkedIndices[1].toList(),
+            onClickPoint,
             modifier = Modifier
                 .weight(6 * pointWeight)
                 .fillMaxHeight()
@@ -80,7 +91,10 @@ fun Board(
 
         BoardHalf(
             chunkedData[3],
+            chunkedIndices[3].toList(),
             chunkedData[0],
+            chunkedIndices[0].toList(),
+            onClickPoint,
             modifier = Modifier
                 .weight(6 * pointWeight)
                 .fillMaxHeight()
@@ -94,28 +108,28 @@ fun Board(
 fun PreviewBoard() {
     val data = listOf(
         PointData(2, BGColour.BLACK),
-        null,
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(5, BGColour.WHITE),
-        null,
+        PointData(0),
         PointData(3, BGColour.WHITE),
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(5, BGColour.BLACK),
         PointData(5, BGColour.WHITE),
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(3, BGColour.BLACK),
-        null,
+        PointData(0),
         PointData(5, BGColour.BLACK),
-        null,
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(2, BGColour.WHITE)
     )
 
@@ -123,6 +137,7 @@ fun PreviewBoard() {
         Board(
             data,
             arrayOf(0, 0),
+            { },
             Modifier
                 .fillMaxSize()
                 .background(Color(0xff118811))
@@ -135,28 +150,28 @@ fun PreviewBoard() {
 fun PreviewBoardWithBar() {
     val data = listOf(
         PointData(2, BGColour.BLACK),
-        null,
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(4, BGColour.WHITE),
-        null,
+        PointData(0),
         PointData(3, BGColour.WHITE),
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(3, BGColour.BLACK),
         PointData(6, BGColour.WHITE),
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(3, BGColour.BLACK),
-        null,
+        PointData(0),
         PointData(4, BGColour.BLACK),
-        null,
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(1, BGColour.WHITE)
     )
 
@@ -164,6 +179,7 @@ fun PreviewBoardWithBar() {
         Board(
             data,
             arrayOf(1, 3),
+            { },
             Modifier
                 .fillMaxSize()
                 .background(Color(0xff118811))

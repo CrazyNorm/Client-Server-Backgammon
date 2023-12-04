@@ -14,8 +14,11 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
 fun BoardHalf(
-    topData: List<PointData?>,
-    bottomData: List<PointData?>,
+    topData: List<PointData>,
+    topInd: List<Int>,
+    bottomData: List<PointData>,
+    bottomInd: List<Int>,
+    onClickPoint: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // top data works left to right
@@ -31,6 +34,7 @@ fun BoardHalf(
                 Point(
                     colour,
                     topData[i],
+                    { onClickPoint(topInd[i]) },
                     Modifier
                         .weight(1f),
                     rotate = true
@@ -47,6 +51,7 @@ fun BoardHalf(
                 Point(
                     colour,
                     bottomData[5 - i],
+                    { onClickPoint(bottomInd[i]) },
                     Modifier
                         .weight(1f)
                 )
@@ -61,25 +66,28 @@ fun BoardHalf(
 fun PreviewHalfBoard() {
     val bottomData = listOf(
         PointData(2, BGColour.BLACK),
-        null,
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(5, BGColour.WHITE)
     )
     val topData = listOf(
         PointData(5, BGColour.BLACK),
-        null,
-        null,
-        null,
-        null,
+        PointData(0),
+        PointData(0),
+        PointData(0),
+        PointData(0),
         PointData(2, BGColour.WHITE)
     )
 
     DominoBackgammonClientTheme {
         BoardHalf(
             topData,
+            emptyList(),
             bottomData,
+            emptyList(),
+            { },
             Modifier
                 .fillMaxSize()
                 .background(Color(0xff118811))

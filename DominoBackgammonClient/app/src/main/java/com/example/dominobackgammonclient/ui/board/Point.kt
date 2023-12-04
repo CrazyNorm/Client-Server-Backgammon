@@ -1,6 +1,8 @@
 package com.example.dominobackgammonclient.ui.board
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 import com.example.dominobackgammonclient.ui.theme.TriangleShape
@@ -18,38 +21,42 @@ import com.example.dominobackgammonclient.ui.theme.TriangleShape
 @Composable
 fun Point(
     pointColour: BGColour,
-    data: PointData?,
+    data: PointData,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     rotate: Boolean = false
 ) {
-    if (data == null) {
-        if (rotate) Point(pointColour, modifier.rotate(180f))
-        else Point(pointColour, modifier)
-    }
-    else {
-        Box(modifier) {
-            if (rotate) Point(pointColour, Modifier.rotate(180f))
-            else Point(pointColour)
+    Box(modifier) {
+        var mod: Modifier = Modifier.clickable { onClick() };
+        if (rotate) mod = mod.rotate(180f)
+        if (data.pointSelected) mod = mod.border(5.dp, Color.Green)
 
-            Column(
-                verticalArrangement = if (rotate) Arrangement.Top else Arrangement.Bottom,
-                modifier = Modifier
-                    .aspectRatio(.18f)
-            ) {
-                var i = 0
+        Point(pointColour, mod)
 
-                if (data.count > 5) {
-                    if (!rotate) Piece(data.colour, data.count)
-                    i++
-                }
+        Column(
+            verticalArrangement = if (rotate) Arrangement.Top else Arrangement.Bottom,
+            modifier = Modifier
+                .aspectRatio(.18f)
+        ) {
+            var i = 0
+            // modifier highlights top / bottom piece if selected
+            val pieceMod = if (data.pieceSelected) Modifier.border(5.dp, Color.Green) else Modifier
 
-                while (i < data.count && i < 5) {
-                    Piece(data.colour)
-                    i++
-                }
-
-                if (rotate && data.count > 5)  Piece(data.colour, data.count)
+            if (data.count > 5) {
+                if (!rotate) Piece(data.colour, data.count, pieceMod)
+                i++
             }
+
+            while (i < data.count && i < 5) {
+                // highlight top / bottom piece
+                if (!rotate && i == 0) Piece(data.colour, pieceMod)
+                else if (rotate && i == data.count - 1) Piece(data.colour, pieceMod)
+
+                else Piece(data.colour)
+                i++
+            }
+
+            if (rotate && data.count > 5)  Piece(data.colour, data.count, pieceMod)
         }
     }
 }
@@ -83,7 +90,8 @@ fun PreviewWhitePoint() {
     DominoBackgammonClientTheme {
         Point(
             BGColour.WHITE,
-            PointData(3, BGColour.WHITE)
+            PointData(3, BGColour.WHITE),
+            { }
         )
     }
 }
@@ -94,6 +102,8 @@ fun PreviewBlackPoint() {
     DominoBackgammonClientTheme {
         Point(
             BGColour.BLACK,
-            PointData(6, BGColour.WHITE))
+            PointData(6, BGColour.WHITE),
+            { }
+        )
     }
 }

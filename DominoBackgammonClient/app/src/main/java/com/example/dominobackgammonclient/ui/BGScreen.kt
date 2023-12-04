@@ -45,14 +45,28 @@ fun BGScreen(
                 .padding(horizontal = 8.dp)
         )
 
-        Board(
-            board = gameState.board,
-            client = gameState.getColour(Player.Client),
-            opponent = gameState.getColour(Player.Opponent),
-            modifier = Modifier
-                .background(Color(0xFF4CAF50))
-                .weight(.5f)
-        )
+//        if (gameState.isPieceSelected)
+//            Board(
+//                board = gameState.board,
+//                client = gameState.getColour(Player.Client),
+//                opponent = gameState.getColour(Player.Opponent),
+//                highlightedPieces = gameState.highlightedMoves,
+//                onClickPoint = { p -> bgViewModel.selectPiece(p) },
+//                modifier = Modifier
+//                    .background(Color(0xFF673AB7))
+//                    .weight(.5f)
+//            )
+//        else
+            Board(
+                board = gameState.board,
+                client = gameState.getColour(Player.Client),
+                opponent = gameState.getColour(Player.Opponent),
+                highlightedPoints = gameState.highlightedMoves,
+                onClickPoint = { p -> bgViewModel.selectPiece(p) },
+                modifier = Modifier
+                    .background(Color(0xFF673AB7))
+                    .weight(.5f)
+            )
 
         PlayerStats(
             colour = gameState.getColour(Player.Client),

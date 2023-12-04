@@ -103,6 +103,10 @@ public class Game {
         return highlightedMoves;
     }
 
+    public boolean isPieceSelected() {
+        return (selectedPoint != -1);
+    }
+
 
     public void undoMove() {
         // undoes the top move from the move stack
@@ -126,10 +130,10 @@ public class Game {
 
 
     public void selectPiece(int point) {
+        // deselect if clicking non-highlighted point
+        if (!highlightedMoves.contains(point)) selectedPoint = -1;
         // if no point selected, select the point
-        if (selectedPoint == -1) selectedPoint = point;
-        // if this point already selected, deselect it
-        else if (selectedPoint == point) selectedPoint = -1;
+        else if (selectedPoint == -1) selectedPoint = point;
         // if another point is selected, move selected piece
         else makeClientMove(point);
 
@@ -148,7 +152,7 @@ public class Game {
 
         // add move to turn stack
         turnStack.push(new int[]{selectedPoint, end});
-        boardStack.push(clientBoard);
+        boardStack.push(new Board(clientBoard));
 
         // select appropriate method for bear off / enter
         if (end == 0) bearOffClient();
@@ -232,6 +236,11 @@ public class Game {
 
         if (side1 == side2) selectDomino(side1);
         else {
+            // undoes any previously made moves
+            while(!turnStack.isEmpty()) {
+                undoMove();
+            }
+
             if (!clientHand.isDominoAvailable(side1,side2)) return;
             if (selectedDomino != null) {
                 selectedDomino.deselect();
@@ -452,7 +461,7 @@ public class Game {
             if (i == 24 && turnCount < 4) continue;
 
             // check bearing off
-            if (i < 6) {
+            if (i < 6 && highestPoint <= 6) {
                 // exact bear off
                 if (i == domino.getSide1() || i == domino.getSide2())
                     parent.addChild(new MoveNode(
