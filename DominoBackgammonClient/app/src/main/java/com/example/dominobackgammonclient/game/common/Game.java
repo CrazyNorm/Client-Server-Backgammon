@@ -109,12 +109,17 @@ public class Game {
 
 
     public void undoMove() {
+        // check there is a move to undo
+        if (turnStack.isEmpty()) return;
+
         // undoes the top move from the move stack
         turnStack.pop();
         // restores board to previous state
         this.clientBoard = boardStack.pop();
         // deselects any selected point
         selectedPoint = -1;
+
+        updateHighlightedMoves();
     }
 
     public void endTurn() {
@@ -237,9 +242,9 @@ public class Game {
         if (side1 == side2) selectDomino(side1);
         else {
             // undoes any previously made moves
-            while(!turnStack.isEmpty()) {
-                undoMove();
-            }
+            if (selectedDouble == null)
+                while(!turnStack.isEmpty())
+                    undoMove();
 
             if (!clientHand.isDominoAvailable(side1,side2)) return;
             if (selectedDomino != null) {
@@ -259,6 +264,10 @@ public class Game {
 
     public void selectDomino(int val) {
         // deselects previous double & selects new double
+
+        // undoes any previously made moves
+        while(!turnStack.isEmpty())
+            undoMove();
 
         if (!clientHand.isDoubleAvailable(val)) return;
         if (selectedDouble != null) {
@@ -403,11 +412,23 @@ public class Game {
             if (child.getMovesLeft() > 0) {
                 // generate board after applying current child's move
                 Board tempBoard = new Board(board);
-                tempBoard.movePiece(
-                        ((MoveNode)child).getStart(),
-                        ((MoveNode)child).getEnd(),
-                        Player.Client
-                );
+                MoveNode move = (MoveNode)child;
+                if (move.getStart() == 25)
+                    tempBoard.enterPiece(
+                            move.getStart(),
+                            Player.Client
+                    );
+                else if (move.getEnd() == 0)
+                    tempBoard.bearOffPiece(
+                            move.getStart(),
+                            Player.Client
+                    );
+                else
+                    tempBoard.movePiece(
+                            move.getStart(),
+                            move.getEnd(),
+                            Player.Client
+                    );
                 // expand the child with the new board state
                 expandNode(child, domino, tempBoard);
             }
@@ -461,7 +482,7 @@ public class Game {
             if (i == 24 && turnCount < 4) continue;
 
             // check bearing off
-            if (i < 6 && highestPoint <= 6) {
+            if (i <= 6 && highestPoint <= 6) {
                 // exact bear off
                 if (i == domino.getSide1() || i == domino.getSide2())
                     parent.addChild(new MoveNode(

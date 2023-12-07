@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dominobackgammonclient.game.common.Player
 import com.example.dominobackgammonclient.ui.board.Board
+import com.example.dominobackgammonclient.ui.common.BGColour
+import com.example.dominobackgammonclient.ui.common.ControlButtons
 import com.example.dominobackgammonclient.ui.common.PlayerStats
 import com.example.dominobackgammonclient.ui.dominoes.DominoList
 
@@ -33,7 +35,7 @@ fun BGScreen(
             colour = gameState.getColour(Player.Opponent),
             hand = gameState.getHand(Player.Opponent),
             onClick = { _,_ -> /* Do nothing for opponent hand */ },
-            modifier = Modifier.weight(.2f)
+            modifier = Modifier.weight(.15f)
         )
 
         PlayerStats(
@@ -72,6 +74,8 @@ fun BGScreen(
             colour = gameState.getColour(Player.Client),
             pipCount = gameState.board.getPipCount(Player.Client),
             offCount = gameState.board.getOffCount(Player.Client),
+            offHighlight = gameState.highlightedMoves.contains(0),
+            onClickOff = { bgViewModel.selectPiece(0) },
             modifier = Modifier
                 .weight(0.05f)
                 .padding(horizontal = 8.dp)
@@ -81,7 +85,13 @@ fun BGScreen(
             colour = gameState.getColour(Player.Client),
             hand = gameState.getHand(Player.Client),
             onClick = { s1, s2 -> bgViewModel.selectDomino(s1, s2) },
-            modifier = Modifier.weight(.2f)
+            modifier = Modifier.weight(.15f)
+        )
+
+        ControlButtons(
+            onUndo = { bgViewModel.undoMove() },
+            onSubmit = { },
+            modifier = Modifier.weight(.1f)
         )
     }
 }

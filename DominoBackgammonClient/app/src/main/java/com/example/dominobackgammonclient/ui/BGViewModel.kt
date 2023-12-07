@@ -29,12 +29,30 @@ class BGViewModel : ViewModel() {
         _gameState.update { tempGame }
     }
 
+    fun undoMove() {
+        val tempGame = Game(_gameState.value)
+        tempGame.undoMove()
+        _gameState.update { tempGame }
+    }
+
     init {
         // for test demonstration purposes: remove!
         _gameState.value.useDomino(6, 4, Player.Client)
         _gameState.value.getHand(Player.Client).nextDouble.unblock()
 
+        _gameState.value.board.movePiece(8, 4, Player.Client);
+        _gameState.value.board.movePiece(8, 4, Player.Client);
+        _gameState.value.board.movePiece(8, 4, Player.Client);
 
-        gameState.value.generateValidMoves()
+        _gameState.value.board.movePiece(13, 5, Player.Client);
+        _gameState.value.board.movePiece(13, 5, Player.Client);
+        _gameState.value.board.movePiece(13, 5, Player.Client);
+        _gameState.value.board.movePiece(13, 5, Player.Client);
+        _gameState.value.board.movePiece(13, 5, Player.Client);
+
+        _gameState.value.board.movePiece(24, 3, Player.Client);
+        _gameState.value.board.movePiece(24, 3, Player.Client);
+
+        _gameState.value.generateValidMoves()
     }
 }

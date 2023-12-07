@@ -1,4 +1,4 @@
-package com.example.dominobackgammonclient.ui.board
+package com.example.dominobackgammonclient.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.dominobackgammonclient.ui.common.BGColour
+import com.example.dominobackgammonclient.ui.board.Piece
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable

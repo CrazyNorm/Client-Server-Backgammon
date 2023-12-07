@@ -1,0 +1,55 @@
+package com.example.dominobackgammonclient.ui.common
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
+
+@Composable
+fun ControlButtons(
+    onUndo: () -> Unit,
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier.padding(vertical = 10.dp)
+    ) {
+        Button(
+            onClick = onUndo,
+            modifier = Modifier
+                .weight(0.5f)
+        ) {
+            Text("Undo")
+        }
+
+        Button(
+            onClick = onSubmit,
+            modifier = Modifier.weight(0.5f)
+        ) {
+            Text("Submit")
+        }
+    }
+}
+
+
+@Preview (widthDp = 500, heightDp = 100)
+@Composable
+fun PreviewControlButtons() {
+    DominoBackgammonClientTheme {
+        ControlButtons(
+            onUndo = { },
+            onSubmit = { }
+        )
+    }
+}
