@@ -415,7 +415,7 @@ public class Game {
                 MoveNode move = (MoveNode)child;
                 if (move.getStart() == 25)
                     tempBoard.enterPiece(
-                            move.getStart(),
+                            move.getEnd(),
                             Player.Client
                     );
                 else if (move.getEnd() == 0)
@@ -443,8 +443,7 @@ public class Game {
         // if possible, add the parent's distance to the current distance
         try {
             dist += ((MoveNode) parent).getDistance();
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) { }
 
         // if any pieces on bar, then only add moves which enter
         if (board.getBarCount(Player.Client) > 0) {
@@ -466,6 +465,8 @@ public class Game {
                         dist,
                         moves)
                 );
+
+            return;
         }
 
         // track the highest point with at least 1 piece (used for bearing off)
@@ -556,6 +557,8 @@ public class Game {
                         dist,
                         moves)
                 );
+
+            return;
         }
 
         // track the highest point with at least 1 piece (used for bearing off)

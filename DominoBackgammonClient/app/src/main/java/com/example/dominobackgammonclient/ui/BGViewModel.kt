@@ -1,11 +1,8 @@
 package com.example.dominobackgammonclient.ui
 
 import androidx.lifecycle.ViewModel
-import com.example.dominobackgammonclient.game.board.Board
 import com.example.dominobackgammonclient.game.common.Game
 import com.example.dominobackgammonclient.game.common.Player
-import com.example.dominobackgammonclient.game.dominoes.Domino
-import com.example.dominobackgammonclient.game.dominoes.Hand
 import com.example.dominobackgammonclient.ui.common.BGColour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,18 +37,20 @@ class BGViewModel : ViewModel() {
         _gameState.value.useDomino(6, 4, Player.Client)
         _gameState.value.getHand(Player.Client).nextDouble.unblock()
 
-        _gameState.value.board.movePiece(8, 4, Player.Client);
-        _gameState.value.board.movePiece(8, 4, Player.Client);
-        _gameState.value.board.movePiece(8, 4, Player.Client);
+        _gameState.value.board.hitPiece(6, Player.Client)
 
-        _gameState.value.board.movePiece(13, 5, Player.Client);
-        _gameState.value.board.movePiece(13, 5, Player.Client);
-        _gameState.value.board.movePiece(13, 5, Player.Client);
-        _gameState.value.board.movePiece(13, 5, Player.Client);
-        _gameState.value.board.movePiece(13, 5, Player.Client);
-
-        _gameState.value.board.movePiece(24, 3, Player.Client);
-        _gameState.value.board.movePiece(24, 3, Player.Client);
+//        _gameState.value.board.movePiece(8, 4, Player.Client);
+//        _gameState.value.board.movePiece(8, 4, Player.Client);
+//        _gameState.value.board.movePiece(8, 4, Player.Client);
+//
+//        _gameState.value.board.movePiece(13, 5, Player.Client);
+//        _gameState.value.board.movePiece(13, 5, Player.Client);
+//        _gameState.value.board.movePiece(13, 5, Player.Client);
+//        _gameState.value.board.movePiece(13, 5, Player.Client);
+//        _gameState.value.board.movePiece(13, 5, Player.Client);
+//
+//        _gameState.value.board.movePiece(24, 3, Player.Client);
+//        _gameState.value.board.movePiece(24, 3, Player.Client);
 
         _gameState.value.generateValidMoves()
     }

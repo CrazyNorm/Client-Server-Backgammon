@@ -40,15 +40,29 @@ fun Board(
         pointsData.add(data)
     }
 
-    val barData = arrayOf(board.getBarCount(Player.Client), board.getBarCount(Player.Opponent))
+    val barData = arrayOf(
+        PointData(board.getBarCount(Player.Client), client),
+        PointData(board.getBarCount(Player.Opponent), opponent)
+    )
+    val highlightBar =
+        if (highlightedPoints.contains(25)) true
+        else if (highlightedPieces.contains(25)) true
+        else false
 
-    Board(pointsData, barData, onClickPoint, modifier)
+    Board(
+        pointsData,
+        barData,
+        highlightBar,
+        onClickPoint,
+        modifier
+    )
 }
 
 @Composable
 fun Board(
     data: List<PointData>,
-    bar: Array<Int>,
+    bar: Array<PointData>,
+    highlightBar: Boolean,
     onClickPoint: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,7 +91,9 @@ fun Board(
         Bar(
             bar[0],
             bar[1],
-            Modifier
+            { onClickPoint(25) },
+            highlightClient = highlightBar,
+            modifier = Modifier
                 .weight(pointWeight)
                 .background(Color.Gray)
         )
@@ -136,7 +152,8 @@ fun PreviewBoard() {
     DominoBackgammonClientTheme {
         Board(
             data,
-            arrayOf(0, 0),
+            arrayOf(PointData(0), PointData(0)),
+            true,
             { },
             Modifier
                 .fillMaxSize()
@@ -178,7 +195,8 @@ fun PreviewBoardWithBar() {
     DominoBackgammonClientTheme {
         Board(
             data,
-            arrayOf(1, 3),
+            arrayOf(PointData(1, BGColour.WHITE), PointData(3, BGColour.BLACK)),
+            true,
             { },
             Modifier
                 .fillMaxSize()

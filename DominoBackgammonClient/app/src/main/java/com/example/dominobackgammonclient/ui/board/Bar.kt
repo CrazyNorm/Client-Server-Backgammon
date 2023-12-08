@@ -1,49 +1,58 @@
 package com.example.dominobackgammonclient.ui.board
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
 fun Bar(
-    white: Int,
-    black: Int,
-    modifier: Modifier = Modifier
+    client: PointData,
+    opponent: PointData,
+    onClickClient: () -> Unit,
+    modifier: Modifier = Modifier,
+    highlightClient: Boolean = false
 ) {
+    val cMod = if (highlightClient) Modifier.border(5.dp, Color.Green) else Modifier
     Column(modifier) {
         Box(Modifier.weight(1f)) {
-            if (white == 1) {
+            if (client.count == 1) {
                 Piece(
-                    BGColour.WHITE,
-                    modifier = Modifier
+                    client.colour,
+                    modifier = cMod
                         .align(Alignment.Center)
+                        .clickable { onClickClient() }
                 )
-            } else if (white > 1) {
+            } else if (client.count > 1) {
                 Piece(
-                    BGColour.WHITE,
-                    white,
-                    modifier = Modifier
+                    client.colour,
+                    client.count,
+                    modifier = cMod
                         .align(Alignment.Center)
+                        .clickable { onClickClient() }
                 )
             }
         }
 
         Box(Modifier.weight(1f)) {
-            if (black == 1) {
+            if (opponent.count == 1) {
                 Piece(
-                    BGColour.BLACK,
+                    opponent.colour,
                     modifier = Modifier
                         .align(Alignment.Center)
                 )
-            } else if (black > 1) {
+            } else if (opponent.count > 1) {
                 Piece(
-                    BGColour.BLACK,
-                    black,
+                    opponent.colour,
+                    opponent.count,
                     modifier = Modifier
                         .align(Alignment.Center)
                 )
@@ -57,7 +66,7 @@ fun Bar(
 @Composable
 fun PreviewBarEmpty() {
     DominoBackgammonClientTheme {
-        Bar(white = 0, black = 0)
+        Bar(PointData(0), PointData(0), { })
     }
 }
 
@@ -65,7 +74,7 @@ fun PreviewBarEmpty() {
 @Composable
 fun PreviewBarOne() {
     DominoBackgammonClientTheme {
-        Bar(white = 1, black = 0)
+        Bar(PointData(1, BGColour.WHITE), PointData(0), { })
     }
 }
 
@@ -73,6 +82,6 @@ fun PreviewBarOne() {
 @Composable
 fun PreviewBarFull() {
     DominoBackgammonClientTheme {
-        Bar(white = 4, black = 5)
+        Bar(PointData(4, BGColour.WHITE), PointData(5, BGColour.BLACK), { })
     }
 }
