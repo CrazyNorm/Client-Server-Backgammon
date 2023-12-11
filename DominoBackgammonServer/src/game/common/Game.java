@@ -3,6 +3,9 @@ package game.common;
 import game.board.Board;
 import game.board.Point;
 import game.dominoes.Hand;
+import server.pojo.DominoPojo;
+import server.pojo.MovePojo;
+import server.pojo.TurnPojo;
 
 public class Game {
 
@@ -11,11 +14,12 @@ public class Game {
     // start point = 25 means enter from bar
     // (doesn't change for each player)
 
-    private final Board boardState;
+    private Board boardState;
     private final Hand whiteDominoes;
     private final Hand blackDominoes;
     private Player currentPlayer;
     private int turnCount;
+    private boolean swapped;
 
 
     public Game() {
@@ -39,6 +43,7 @@ public class Game {
     }
 
     private boolean checkMove(int start, int end) {
+        // TODO check for using wrong number of moves
         // check the current player doesn't have any pieces to enter first
         if (boardState.getBarCount(currentPlayer) > 0) return false;
         // check for trying to move the back men before turn 4
@@ -192,6 +197,9 @@ public class Game {
         if (currentPlayer == Player.White) dominoes = whiteDominoes;
         else dominoes = blackDominoes;
 
+        // check already swapped once
+        if (!swapped) return false;
+
         // check non-double is available
         if (!checkDomino(side1, side2)) return false;
 
@@ -251,11 +259,58 @@ public class Game {
     public void swapHands() {
         whiteDominoes.swapDominoSet();
         blackDominoes.swapDominoSet();
+        if (!swapped) swapped = true;
     }
 
-    // check turn (side1, side2, (val,) start1, end1, start2, end2(, start3, end3, start4, end4))?
-    // check turn (encoded turn)?
-    // just call check domino & check move & check win from socket thread?
-    // check turn (side1, start1, end1)?
-    // check turn (Move object)?
+
+    public boolean checkTurn(TurnPojo turn) {
+        // checks an entire turn is valid
+
+        // check correct player
+        if (currentPlayer != turn.getPlayer()) return false;
+
+        // check the domino(s) are valid
+        if (turn.getDominoes().isEmpty() || turn.getDominoes().size() > 2) return false;
+        DominoPojo dom = turn.getDominoes().get(0);
+        DominoPojo dbl = null;
+        if (turn.getDominoes().size() == 1) {
+            // 1 domino - check domino is non-double & valid
+            if (dom.getSide1() == dom.getSide2()) return false;
+            if (!checkDomino(dom.getSide1(), dom.getSide2())) return false;
+        }
+        else if (turn.getDominoes().size() == 2) {
+            // 2 dominoes - check only 1 is double & both valid
+            DominoPojo d1 = turn.getDominoes().get(0);
+            DominoPojo d2 = turn.getDominoes().get(1);
+
+            if (d1.getSide1() == d1.getSide2()) {
+                if (d2.getSide1() == d2.getSide2()) return false;
+                dom = d2;
+                dbl = d1;
+            } else if (d2.getSide1() == d2.getSide2()) {
+                dom = d1;
+                dbl = d2;
+            } else return false;
+
+            if (!checkDomino(dbl.getSide1(), dom.getSide1(), dom.getSide2())) return false;
+        }
+
+        Board restoreBoard = new Board(this.boardState);
+        // check moves are valid
+        for (MovePojo move: turn.getMoves()) {
+            if (!check(move.getStart(), move.getEnd())) {
+                // restore board to before any moves were made
+                this.boardState = restoreBoard;
+                return false;
+            }
+            make(move.getStart(), move.getEnd());
+        }
+
+        // player, dominoes & moves all valid
+        // mark dominoes as used
+        if (dbl == null) useDomino(dom.getSide1(), dom.getSide2());
+        else useDomino(dbl.getSide1(), dom.getSide1(), dom.getSide2());
+
+        return true;
+    }
 }

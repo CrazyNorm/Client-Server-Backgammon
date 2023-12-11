@@ -23,6 +23,13 @@ public class Point {
         this.state = PointState.Open;
     }
 
+    public Point(Point oldPoint) {
+        // copy constructor
+        this.count = oldPoint.count;
+        this.player = oldPoint.player;
+        this.state = oldPoint.state;
+    }
+
 
     public int getCount() {
         return count;

@@ -37,6 +37,18 @@ public class Board {
         updatePipCount();
     }
 
+    public Board(Board oldBoard) {
+        // deep copy constructor
+
+        this.points = new Point[POINT_COUNT];
+        for (int i = 0; i < POINT_COUNT; i++)
+            this.points[i] = new Point(oldBoard.points[i]);
+
+        this.offBoard = oldBoard.offBoard.clone();
+        this.bar = oldBoard.bar.clone();
+        this.pipCounts = oldBoard.pipCounts.clone();
+    }
+
 
     public Point getPoint(int p) {
         return points[p - 1];
