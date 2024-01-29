@@ -1,6 +1,7 @@
 package server.pojo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import game.common.Player;
 
@@ -15,7 +16,9 @@ public class NextTurn {
     private Swap swap;
 
 
-    public NextTurn(Player next) {
+    public NextTurn(
+            @JsonProperty("next") Player next
+    ) {
         this.next = next;
     }
 

@@ -1,5 +1,6 @@
 package server.pojo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 public class Deny {
@@ -8,7 +9,9 @@ public class Deny {
     private final String reason;
 
 
-    public Deny(String reason) {
+    public Deny(
+            @JsonProperty("reason") String reason
+    ) {
         this.reason = reason;
     }
 

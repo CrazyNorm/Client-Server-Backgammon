@@ -1,6 +1,7 @@
 package server.pojo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
@@ -11,20 +12,22 @@ public class Response {
     private final long responseTo;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Approve approve;
+    private Approve approve; // server
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Deny deny;
+    private Deny deny; // server
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Acknowledge acknowledge;
+    private Acknowledge acknowledge; // client
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Hash hash;
+    private Hash hash; // client
 
 
     public Response() {
         this(0L);
     }
 
-    public Response(long responseTo) {
+    public Response(
+            @JsonProperty("to") long responseTo
+    ) {
         this.responseTo = responseTo;
     }
 
@@ -41,12 +44,20 @@ public class Response {
         this.approve = approve;
     }
 
+    public boolean isApprove() {
+        return approve != null;
+    }
+
     public Deny getDeny() {
         return deny;
     }
 
     public void setDeny(Deny deny) {
         this.deny = deny;
+    }
+
+    public boolean isDeny() {
+        return deny != null;
     }
 
     public Acknowledge getAcknowledge() {
@@ -57,11 +68,19 @@ public class Response {
         this.acknowledge = acknowledge;
     }
 
+    public boolean isAcknowledge() {
+        return acknowledge != null;
+    }
+
     public Hash getHash() {
         return hash;
     }
 
     public void setHash(Hash hash) {
         this.hash = hash;
+    }
+
+    public boolean isHash() {
+        return hash != null;
     }
 }

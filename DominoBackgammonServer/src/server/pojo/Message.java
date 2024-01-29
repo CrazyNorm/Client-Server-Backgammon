@@ -1,6 +1,7 @@
 package server.pojo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
@@ -11,22 +12,24 @@ public class Message {
     private final long idempotencyKey;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Connect connect;
+    private Connect connect; // client
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Start start;
+    private Start start; // server
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private TurnPojo turn;
+    private TurnPojo turn; // client / server
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Reset reset;
+    private Reset reset; // server
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private NextTurn nextTurn;
+    private NextTurn nextTurn; // server
 
 
     public Message() {
         this(0L);
     }
 
-    public Message(long idempotencyKey) {
+    public Message(
+            @JsonProperty("idem_key") long idempotencyKey
+    ) {
         this.idempotencyKey = idempotencyKey;
     }
 
@@ -43,12 +46,20 @@ public class Message {
         this.turn = turn;
     }
 
+    public boolean isTurn() {
+        return turn != null;
+    }
+
     public Connect getConnect() {
         return connect;
     }
 
     public void setConnect(Connect connect) {
         this.connect = connect;
+    }
+
+    public boolean isConnect() {
+        return connect != null;
     }
 
     public Start getStart() {
@@ -59,6 +70,10 @@ public class Message {
         this.start = start;
     }
 
+    public boolean isStart() {
+        return start != null;
+    }
+
     public Reset getReset() {
         return reset;
     }
@@ -67,11 +82,19 @@ public class Message {
         this.reset = reset;
     }
 
+    public boolean isReset() {
+        return reset != null;
+    }
+
     public NextTurn getNextTurn() {
         return nextTurn;
     }
 
     public void setNextTurn(NextTurn nextTurn) {
         this.nextTurn = nextTurn;
+    }
+
+    public boolean isNextTurn() {
+        return nextTurn != null;
     }
 }

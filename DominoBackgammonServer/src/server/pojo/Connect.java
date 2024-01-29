@@ -1,5 +1,6 @@
 package server.pojo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 public class Connect {
@@ -10,7 +11,10 @@ public class Connect {
     private final String opponentType;
 
 
-    public Connect(String playerName, String opponentType) {
+    public Connect(
+            @JsonProperty("name") String playerName,
+            @JsonProperty("opponent") String opponentType
+    ) {
         this.playerName = playerName;
         this.opponentType = opponentType;
     }
