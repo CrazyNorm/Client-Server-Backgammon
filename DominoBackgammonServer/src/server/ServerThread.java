@@ -1,6 +1,8 @@
 package server;
 
 import game.common.Game;
+import server.pojo.Approve;
+import server.pojo.Deny;
 import server.pojo.Message;
 import server.pojo.Response;
 import server.xml.ProtocolMapper;
@@ -18,6 +20,8 @@ public class ServerThread extends Thread {
     private final Socket socket;
 
     private final List<Socket> otherPlayers;
+
+    private final ProtocolMapper protocolMapper = new ProtocolMapper();
 
     private Game game;
 
@@ -42,7 +46,6 @@ public class ServerThread extends Thread {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
 
-            ProtocolMapper protocolMapper = new ProtocolMapper();
             String lines;
             while((lines = in.readLine()) != null) {
                 if (lines.isEmpty()) continue;
@@ -63,7 +66,29 @@ public class ServerThread extends Thread {
                 if (type.equals("m")) {
                     Message m = protocolMapper.deserializeMessage(doc.toString());
 
-                    System.out.println(m);
+                    // find appropriate response
+                    Response r = new Response(m.getIdempotencyKey());
+                    if (!m.isTurn()) r.setDeny(new Deny("Wrong message"));
+                    else if (!game.checkTurn(m.getTurn())) r.setDeny(new Deny("Invalid turn"));
+                    else r.setApprove(new Approve());
+
+                    // send response
+                    String xml = protocolMapper.serialize(r);
+                    out.println(xml.split("\n").length + "r");
+                    out.println(xml);
+
+                    // if approved, forward turn to all players
+                    if (r.isApprove()) {
+                        String prefix = doc.toString().split("\n").length + "m";
+                        out.println(prefix);
+                        out.println(doc);
+
+                        for (Socket other: otherPlayers) {
+                            PrintWriter otherOut = new PrintWriter(other.getOutputStream(), true);
+                            otherOut.println(prefix);
+                            otherOut.println(doc);
+                        }
+                    }
                 }
 
                 // response type
