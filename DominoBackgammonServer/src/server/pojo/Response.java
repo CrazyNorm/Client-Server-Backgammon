@@ -1,5 +1,6 @@
 package server.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -82,5 +83,10 @@ public class Response {
 
     public boolean isHash() {
         return hash != null;
+    }
+
+    @JsonIgnore
+    public boolean isMalformed() {
+        return (approve == null) && (deny == null) && (acknowledge == null) && (hash == null);
     }
 }

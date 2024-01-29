@@ -1,5 +1,6 @@
 package server.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -96,5 +97,10 @@ public class Message {
 
     public boolean isNextTurn() {
         return nextTurn != null;
+    }
+
+    @JsonIgnore
+    public boolean isMalformed() {
+        return (connect == null) && (start == null) && (turn == null) && (reset == null) && (nextTurn == null);
     }
 }

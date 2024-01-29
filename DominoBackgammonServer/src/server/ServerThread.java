@@ -59,7 +59,7 @@ public class ServerThread extends Thread {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
             // wait to recieve connect message before continuing
-            connect(out, in);
+            handleConnect(out, in);
 
             // wait for server to start the game
             if (game == null)
@@ -67,13 +67,7 @@ public class ServerThread extends Thread {
                     socket.wait();
                 }
             // send start message
-            Message start = new Message();
-            start.setStart(new Start(opponent, colour));
-
-            String start_xml = protocolMapper.serialize(start);
-            out.println(start_xml.split("\n").length + "m");
-            out.println(start_xml);
-            // todo: wait for acknowledge response
+            handleStart(out, in);
 
             // main server loop
             String lines;
@@ -98,7 +92,7 @@ public class ServerThread extends Thread {
 
                     // find appropriate response
                     Response r = new Response(m.getIdempotencyKey());
-                    if (game == null) r.setDeny(new Deny("Game hasn't started"));
+                    if (m.isMalformed()) r.setDeny(new Deny("Malformed"));
                     else if (!m.isTurn()) r.setDeny(new Deny("Wrong message"));
                     else if (m.getTurn().getPlayer() != colour) r.setDeny(new Deny("Wrong player"));
                     else if (!game.checkTurn(m.getTurn())) r.setDeny(new Deny("Invalid turn"));
@@ -139,8 +133,8 @@ public class ServerThread extends Thread {
         }
     }
 
-    private void connect(PrintWriter out, BufferedReader in) throws IOException {
-        // waits to recieve a 'connect' message from the new client
+    private void handleConnect(PrintWriter out, BufferedReader in) throws IOException {
+        // waits to receive a 'connect' message from the new client
         String lines;
         while((lines = in.readLine()) != null) {
             if (lines.isEmpty()) continue;
@@ -163,7 +157,8 @@ public class ServerThread extends Thread {
 
                 // find appropriate response
                 Response r = new Response(message.getIdempotencyKey());
-                if (!message.isConnect()) r.setDeny(new Deny("Connect first"));
+                if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
+                else if (!message.isConnect()) r.setDeny(new Deny("Connect first"));
                 else r.setApprove(new Approve());
 
                 // send response
@@ -185,7 +180,7 @@ public class ServerThread extends Thread {
 
                 // response is reject as only accepting 'connect' messages
                 Response r = new Response(response.getResponseTo());
-                r.setDeny(new Deny("Connect first"));
+                r.setDeny(new Deny("Incorrect response"));
 
                 // send response
                 String xml = protocolMapper.serialize(r);
@@ -201,6 +196,61 @@ public class ServerThread extends Thread {
         this.game = game;
         synchronized (socket) {
             socket.notify();
+        }
+    }
+
+
+    private void handleStart(PrintWriter out, BufferedReader in) throws IOException {
+        // sends a start message then waits to receive an 'acknowledge' response
+        Message start = new Message();
+        start.setStart(new Start(opponent, colour));
+
+        String start_xml = protocolMapper.serialize(start);
+        out.println(start_xml.split("\n").length + "m");
+        out.println(start_xml);
+
+
+        String lines;
+        while((lines = in.readLine()) != null) {
+            if (lines.isEmpty()) continue;
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // message type
+            if (type.equals("m")) {
+                Message message = protocolMapper.deserializeMessage(doc.toString());
+
+                // response is reject as only accepting 'acknowledge' responses
+                Response r = new Response(message.getIdempotencyKey());
+                if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
+                else r.setDeny(new Deny("Game hasn't started"));
+
+                // send response
+                String xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+            }
+
+            // response type
+            else if (type.equals("r")) {
+                Response response = protocolMapper.deserializeResponse(doc.toString());
+
+                // doesn't need a response
+
+                // once acknowledge is received, stop waiting
+                if (response.isAcknowledge())
+                    break;
+            }
         }
     }
 }

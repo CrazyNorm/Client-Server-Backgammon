@@ -2,6 +2,7 @@ package server.xml;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import server.pojo.Message;
 import server.pojo.Response;
@@ -30,6 +31,8 @@ public class ProtocolMapper {
         Message deserialized;
         try {
             deserialized = mapper.readValue(xml, Message.class);
+        } catch (UnrecognizedPropertyException u) {
+            deserialized = new Message();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -43,6 +46,8 @@ public class ProtocolMapper {
         Response deserialized;
         try {
             deserialized = mapper.readValue(xml, Response.class);
+        } catch (UnrecognizedPropertyException u) {
+            deserialized = new Response();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
