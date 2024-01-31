@@ -10,14 +10,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ServerThread extends Thread {
 
     private final Socket socket;
 
-    private final List<Socket> otherPlayers;
+    private final Queue<Object> messageQueue;
+
+    private final List<Queue<Object>> otherPlayers;
 
     private final ProtocolMapper protocolMapper = new ProtocolMapper();
 
@@ -29,26 +30,27 @@ public class ServerThread extends Thread {
 
     public ServerThread(Socket socket) {
         this.socket = socket;
+        this.messageQueue = new ArrayDeque<>();
         this.otherPlayers = new ArrayList<>();
     }
 
-    public void addPlayer(Socket socket, String name) {
+    public void addPlayer(Queue<Object> messageQueue, String name) {
         // used to add an opponent
-        otherPlayers.add(socket);
+        otherPlayers.add(messageQueue);
         opponent = name;
     }
 
-    public void addPlayer(Socket socket) {
+    public void addPlayer(Queue<Object> messageQueue) {
         // used to add spectators
-        otherPlayers.add(socket);
+        otherPlayers.add(messageQueue);
     }
 
     public String getPlayerName() {
         return name;
     }
 
-    public Socket getSocket() {
-        return socket;
+    public Queue<Object> getMessageQueue() {
+        return messageQueue;
     }
 
 
@@ -69,61 +71,8 @@ public class ServerThread extends Thread {
             // send start message
             handleStart(out, in);
 
-            // main server loop
-            String lines;
-            while((lines = in.readLine()) != null) {
-                if (lines.isEmpty()) continue;
-
-                // get message length & type
-                String type = lines.substring(lines.length() - 1);
-                lines = lines.substring(0, lines.length() - 1);
-
-                // read message
-                StringBuilder doc = new StringBuilder();
-                for (int i = 0; i < Integer.parseInt(lines); i++) {
-                    String inLine = in.readLine();
-                    inLine = inLine.replaceAll("\n", "").strip();
-                    doc.append(inLine);
-                }
-
-                // message type
-                if (type.equals("m")) {
-                    Message m = protocolMapper.deserializeMessage(doc.toString());
-
-                    // find appropriate response
-                    Response r = new Response(m.getIdempotencyKey());
-                    if (m.isMalformed()) r.setDeny(new Deny("Malformed"));
-                    else if (!m.isTurn()) r.setDeny(new Deny("Wrong message"));
-                    else if (m.getTurn().getPlayer() != colour) r.setDeny(new Deny("Wrong player"));
-                    else if (!game.checkTurn(m.getTurn())) r.setDeny(new Deny("Invalid turn"));
-                    else r.setApprove(new Approve());
-
-                    // send response
-                    String xml = protocolMapper.serialize(r);
-                    out.println(xml.split("\n").length + "r");
-                    out.println(xml);
-
-                    // if approved, forward turn to all players
-                    if (r.isApprove()) {
-                        String prefix = doc.toString().split("\n").length + "m";
-                        out.println(prefix);
-                        out.println(doc);
-
-                        for (Socket other: otherPlayers) {
-                            PrintWriter otherOut = new PrintWriter(other.getOutputStream(), true);
-                            otherOut.println(prefix);
-                            otherOut.println(doc);
-                        }
-                    }
-                }
-
-                // response type
-                else if (type.equals("r")) {
-                    Response r = protocolMapper.deserializeResponse(doc.toString());
-
-                    System.out.println(r);
-                }
-            }
+            // main server game loop
+            turnLoop(out, in);
 
         } catch (IOException e) {
             System.err.println("Exception listening for connection");
@@ -252,5 +201,171 @@ public class ServerThread extends Thread {
                     break;
             }
         }
+    }
+
+
+    private void turnLoop(PrintWriter out, BufferedReader in) throws IOException {
+        // loops recieving messages and sending responses
+
+        String lines;
+        while((lines = in.readLine()) != null) {
+            if (lines.isEmpty()) continue;
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // message type
+            if (type.equals("m")) {
+                Message m = protocolMapper.deserializeMessage(doc.toString());
+
+                // find appropriate response
+                Response r = new Response(m.getIdempotencyKey());
+                if (m.isMalformed()) r.setDeny(new Deny("Malformed"));
+                else if (!m.isTurn()) r.setDeny(new Deny("Wrong message"));
+                else if (m.getTurn().getPlayer() != colour) r.setDeny(new Deny("Wrong player"));
+                else if (!game.checkTurn(m.getTurn())) r.setDeny(new Deny("Invalid turn"));
+                else r.setApprove(new Approve());
+
+                // send response
+                String xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+
+                // if approved, forward turn to all players
+                if (r.isApprove()) {
+                    sendTurn(out, in, doc.toString());
+
+                    for (Queue<Object> queue: otherPlayers)
+                        queue.add(m);
+
+                    // checkTurn has already applied turn to server game state
+                }
+            }
+
+            // response type
+            else if (type.equals("r")) {
+                Response r = new Response();
+                r.setDeny(new Deny("Unprompted response"));
+
+                // send response
+                String xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+            }
+
+
+            // send any messages from the message queue
+            int queueSize = messageQueue.size();
+            for (int i = 0; i < queueSize; i++) {
+                Object o = messageQueue.poll();
+                String xml = protocolMapper.serialize(o);
+                if (o instanceof Message m) {
+                    if (m.isTurn()) {
+                        sendTurn(out, in, xml);
+                    }
+                }
+                if (o instanceof Response r) {
+                    out.println(xml.split("\n").length + "r");
+                    out.println(xml);
+                }
+            }
+        }
+    }
+
+
+    private void sendTurn(PrintWriter out, BufferedReader in, String xml) throws IOException {
+        // forwards a turn message to clients & checks the correct response
+        out.println(xml.split("\n").length + "m");
+        out.println(xml);
+
+        String checksum = game.checksum();
+
+        String lines;
+        while((lines = in.readLine()) != null) {
+            if (lines.isEmpty()) continue;
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // message type
+            if (type.equals("m")) {
+                Message message = protocolMapper.deserializeMessage(doc.toString());
+
+                // response is reject as only accepting 'hash' responses
+                Response r = new Response(message.getIdempotencyKey());
+                if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
+                else r.setDeny(new Deny("Expecting response"));
+
+                // send response
+                xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+            }
+
+            // response type
+            else if (type.equals("r")) {
+                Response response = protocolMapper.deserializeResponse(doc.toString());
+
+                // doesn't need a response
+                System.out.println(doc);
+
+                // once hash is received, check it is valid then stop waiting
+                boolean reset = false;
+                Response r = new Response(response.getResponseTo());
+                if (!response.isHash()) r.setDeny(new Deny("Incorrect response"));
+                else if (!response.getHash().getValue().equals(checksum)) {
+                    r.setDeny(new Deny("Inconsistent"));
+                    reset = true;
+                }
+                else r.setApprove(new Approve());
+
+                // send response
+                xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+
+                if (r.isApprove()) break;
+                else if (reset) sendReset(out, in);
+            }
+        }
+
+    }
+
+
+    public void sendReset(PrintWriter out, BufferedReader in) {
+        // generates and sends a reset message
+        // doesn't expect a response, but will keep sending resets until it receives the correct hash for the turn
+
+        Message reset = new Message();
+        reset.setReset(new Reset(
+                Arrays.asList(
+                        new PieceList(Player.White, game.getPieces(Player.White)),
+                        new PieceList(Player.Black, game.getPieces(Player.Black))
+                ), Arrays.asList(
+                        new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White)),
+                        new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White))
+        )));
+
+        String xml = protocolMapper.serialize(reset);
+        out.println(xml.split("\n").length + "m");
+        out.println(xml);
     }
 }

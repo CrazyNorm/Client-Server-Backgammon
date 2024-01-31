@@ -2,6 +2,10 @@ package game.dominoes;
 
 import game.common.Player;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Hand {
 
     private Domino[] dominoes;
@@ -100,5 +104,16 @@ public class Hand {
 
     public Player getPlayer() {
         return player;
+    }
+
+    public List<Domino> getDominoes() {
+        List<Domino> allDominoes = new ArrayList<>();
+        Collections.addAll(allDominoes, dominoes);
+        Collections.addAll(allDominoes, doubles);
+        return allDominoes;
+    }
+
+    public int getDominoSet() {
+        return dominoSet;
     }
 }

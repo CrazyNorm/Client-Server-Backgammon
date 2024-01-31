@@ -38,8 +38,8 @@ public class DBGServer {
         // if 2 players in queue, start game between them
         if (!queue.isEmpty()) {
             ServerThread opponent = queue.poll();
-            thread.addPlayer(opponent.getSocket(), opponent.getPlayerName());
-            opponent.addPlayer(thread.getSocket(), thread.getPlayerName());
+            thread.addPlayer(opponent.getMessageQueue(), opponent.getPlayerName());
+            opponent.addPlayer(thread.getMessageQueue(), thread.getPlayerName());
 
             // decide colours at random
             Player colour = Player.None;

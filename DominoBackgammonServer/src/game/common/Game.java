@@ -2,10 +2,14 @@ package game.common;
 
 import game.board.Board;
 import game.board.Point;
+import game.dominoes.Domino;
 import game.dominoes.Hand;
 import server.pojo.DominoPojo;
 import server.pojo.MovePojo;
 import server.pojo.TurnPojo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Game {
 
@@ -264,7 +268,7 @@ public class Game {
 
 
     public boolean checkTurn(TurnPojo turn) {
-        // checks an entire turn is valid
+        // checks an entire turn is valid & applies it if it is
 
         // check correct player
         if (currentPlayer != turn.getPlayer()) return false;
@@ -312,5 +316,47 @@ public class Game {
         else useDomino(dbl.getSide1(), dom.getSide1(), dom.getSide2());
 
         return true;
+    }
+
+
+    public String checksum() {
+        // hashes the game state to compare as a checksum
+        return "";
+    }
+
+
+    public List<Integer> getPieces(Player colour) {
+        List<Integer> pieces = new ArrayList<>();
+        // count on-board pieces
+        for (int i = 1; i < 25; i++) {
+            Point p = boardState.getPoint(i);
+            if (p.getPlayer() == colour)
+                for (int j = 0; j < p.getCount(); j++)
+                    pieces.add(i);
+        }
+        // count hit pieces
+        for (int i = 0; i < boardState.getBarCount(colour); i++)
+            pieces.add(25);
+        // count borne off pieces
+        for (int i = 0; i < boardState.getOffCount(colour); i++)
+            pieces.add(0);
+        return pieces;
+    }
+
+    public List<DominoPojo> getDominoes(Player colour) {
+        List<DominoPojo> dominoPojos = new ArrayList<>();
+        if (colour == Player.White)
+            for (Domino d: whiteDominoes.getDominoes())
+                dominoPojos.add(new DominoPojo(d.getSide1(), d.getSide2(), d.isAvailable()));
+        else if (colour == Player.Black)
+            for (Domino d: blackDominoes.getDominoes())
+                dominoPojos.add(new DominoPojo(d.getSide1(), d.getSide2(), d.isAvailable()));
+
+        return dominoPojos;
+    }
+
+    public int getSet(Player colour) {
+        if (colour == Player.White) return whiteDominoes.getDominoSet();
+        else return blackDominoes.getDominoSet();
     }
 }
