@@ -209,6 +209,7 @@ public class ServerThread extends Thread {
 
         String lines;
         while((lines = in.readLine()) != null) {
+
             if (lines.isEmpty()) continue;
 
             // get message length & type
@@ -222,6 +223,9 @@ public class ServerThread extends Thread {
                 inLine = inLine.replaceAll("\n", "").strip();
                 doc.append(inLine);
             }
+
+            // tracks if the message received is a valid turn (i.e. need next turn afterward)
+            boolean validTurn = false;
 
             // message type
             if (type.equals("m")) {
@@ -248,6 +252,7 @@ public class ServerThread extends Thread {
                         queue.add(m);
 
                     // checkTurn has already applied turn to server game state
+                    validTurn = true;
                 }
             }
 
@@ -265,18 +270,51 @@ public class ServerThread extends Thread {
 
             // send any messages from the message queue
             int queueSize = messageQueue.size();
+            boolean gameOver = false;
             for (int i = 0; i < queueSize; i++) {
                 Object o = messageQueue.poll();
                 String xml = protocolMapper.serialize(o);
                 if (o instanceof Message m) {
-                    if (m.isTurn()) {
+                    if (m.isTurn())
                         sendTurn(out, in, xml);
+                    else if (m.isNextTurn()) {
+                        sendNextTurn(out, in, xml);
+                        if (m.getNextTurn().isWin()) gameOver = true;
                     }
                 }
-                if (o instanceof Response r) {
-                    out.println(xml.split("\n").length + "r");
-                    out.println(xml);
-                }
+            }
+            if (gameOver) {
+                System.out.println("check");
+                break;
+            }
+
+
+            // if turn was valid, send 'next turn' to all players
+            if (validTurn) {
+                game.nextTurn();
+                // generate next turn message
+                Message m = new Message();
+                NextTurn next = new NextTurn(game.getCurrentPlayer());
+
+                if (game.checkHands()) next.setSwap(new Swap());
+
+                Player winner = game.checkWin();
+                if (winner != Player.None)
+                    next.setWin(new Win(winner, game.checkWinType(winner)));
+
+                m.setNextTurn(next);
+
+                // send next turn to all players
+                String xml = protocolMapper.serialize(m);
+                sendNextTurn(out, in, xml);
+
+                for (Queue<Object> queue: otherPlayers)
+                    // turn is added to message queue before next turn
+                    // and thread won't continue after turn until correct checksum received
+                    // therefore next turn is only sent to other players once correct checksum received
+                    queue.add(m);
+
+                if (m.getNextTurn().isWin()) break;
             }
         }
     }
@@ -324,9 +362,6 @@ public class ServerThread extends Thread {
             else if (type.equals("r")) {
                 Response response = protocolMapper.deserializeResponse(doc.toString());
 
-                // doesn't need a response
-                System.out.println(doc);
-
                 // once hash is received, check it is valid then stop waiting
                 boolean reset = false;
                 Response r = new Response(response.getResponseTo());
@@ -350,7 +385,7 @@ public class ServerThread extends Thread {
     }
 
 
-    public void sendReset(PrintWriter out, BufferedReader in) {
+    private void sendReset(PrintWriter out, BufferedReader in) {
         // generates and sends a reset message
         // doesn't expect a response, but will keep sending resets until it receives the correct hash for the turn
 
@@ -367,5 +402,56 @@ public class ServerThread extends Thread {
         String xml = protocolMapper.serialize(reset);
         out.println(xml.split("\n").length + "m");
         out.println(xml);
+    }
+
+
+    private void sendNextTurn(PrintWriter out, BufferedReader in, String xml) throws IOException {
+        // send a next turn message, then wait for an 'acknowledge' response
+
+        out.println(xml.split("\n").length + "m");
+        out.println(xml);
+
+        String lines;
+        while((lines = in.readLine()) != null) {
+            if (lines.isEmpty()) continue;
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // message type
+            if (type.equals("m")) {
+                Message message = protocolMapper.deserializeMessage(doc.toString());
+
+                // response is reject as only accepting 'acknowledge' responses
+                Response r = new Response(message.getIdempotencyKey());
+                if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
+                else r.setDeny(new Deny("Expecting response"));
+
+                // send response
+                xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+            }
+
+            // response type
+            else if (type.equals("r")) {
+                Response response = protocolMapper.deserializeResponse(doc.toString());
+
+                // doesn't need a response
+
+                // once acknowledge is received, stop waiting
+                if (response.isAcknowledge()) break;
+            }
+        }
+
     }
 }

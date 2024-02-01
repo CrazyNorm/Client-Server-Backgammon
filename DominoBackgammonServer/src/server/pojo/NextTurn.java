@@ -35,11 +35,19 @@ public class NextTurn {
         this.win = win;
     }
 
+    public boolean isWin() {
+        return (win != null);
+    }
+
     public Swap getSwap() {
         return swap;
     }
 
     public void setSwap(Swap swap) {
         this.swap = swap;
+    }
+
+    public boolean isSwap() {
+        return (swap != null);
     }
 }
