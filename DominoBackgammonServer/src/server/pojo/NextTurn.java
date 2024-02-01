@@ -14,6 +14,8 @@ public class NextTurn {
     private Win win;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Swap swap;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Disconnect disconnect;
 
 
     public NextTurn(
@@ -49,5 +51,17 @@ public class NextTurn {
 
     public boolean isSwap() {
         return (swap != null);
+    }
+
+    public Disconnect getDisconnect() {
+        return disconnect;
+    }
+
+    public void setDisconnect(Disconnect disconnect) {
+        this.disconnect = disconnect;
+    }
+
+    public boolean isDisconnect() {
+        return (disconnect != null);
     }
 }

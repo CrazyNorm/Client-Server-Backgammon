@@ -25,6 +25,8 @@ public class Game {
     private int turnCount;
     private boolean swapped;
 
+    private Player disconnect; // used to inform all players of a disconnection
+
 
     public Game() {
         this.boardState = new Board();
@@ -32,6 +34,7 @@ public class Game {
         this.blackDominoes = new Hand(Player.Black, 2);
         this.currentPlayer = Player.White;
         this.turnCount = 1;
+        this.disconnect = Player.None;
     }
 
 
@@ -358,5 +361,13 @@ public class Game {
     public int getSet(Player colour) {
         if (colour == Player.White) return whiteDominoes.getDominoSet();
         else return blackDominoes.getDominoSet();
+    }
+
+    public Player getDisconnect() {
+        return this.disconnect;
+    }
+
+    public void setDisconnect(Player disconnect) {
+        this.disconnect = disconnect;
     }
 }
