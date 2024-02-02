@@ -111,7 +111,16 @@ public class ServerThread extends Thread {
             if (lines == null) break;
 
             if (lines.isEmpty()) continue;
-            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -207,7 +216,15 @@ public class ServerThread extends Thread {
                 lastMessage = System.currentTimeMillis();
             }
 
-            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -278,12 +295,13 @@ public class ServerThread extends Thread {
                 continue;
             }
 
-            if (lines.matches("<ka>[mM]</ka>")) {
+            if (lines.matches("<ka>[mrMR]</ka>")) {
                 lastActivity = System.currentTimeMillis();
                 // send keep-alive
-                KeepAlive ka = new KeepAlive("r");
-                String xml = protocolMapper.serialize(ka);
-                out.println(xml);
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
                 continue;
             }
 
@@ -417,7 +435,15 @@ public class ServerThread extends Thread {
                 lastMessage = System.currentTimeMillis();
             }
 
-            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -522,7 +548,15 @@ public class ServerThread extends Thread {
                 lastMessage = System.currentTimeMillis();
             }
 
-            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -629,7 +663,15 @@ public class ServerThread extends Thread {
                 continue;
             }
 
-            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -706,11 +748,18 @@ public class ServerThread extends Thread {
                     continue;
                 }
 
-                if (lines.matches("<ka>[rR]</ka>")) {
-                    System.out.println(lines);
+
+                if (lines.matches("<ka>[mrMR]</ka>")) {
                     lastActivity = System.currentTimeMillis();
-                    break;
+                    if (lines.matches("<ka>[rR]</ka>")) break;
+
+                    // send keep-alive
+                    KeepAlive ka_r = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka_r));
+                    continue;
                 }
+
+
 
                 // get message length & type
                 String type = lines.substring(lines.length() - 1);
