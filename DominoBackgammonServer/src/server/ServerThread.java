@@ -20,11 +20,16 @@ public class ServerThread extends Thread {
 
     private final ProtocolMapper protocolMapper = new ProtocolMapper();
 
+
     private final int MAX_RETRIES = 5; // how many times to retry a message before declaring a disconnect
     private int retries;
 
     private final int TIMEOUT = 500; // how long to wait (ms) before retrying a message if no response received
     private long lastMessage;
+
+
+    private final int KA_TIMEOUT = 5000; // how long to wait (ms) before sending a keep-alive
+    private long lastActivity;
 
 
     private String name;
@@ -106,6 +111,7 @@ public class ServerThread extends Thread {
             if (lines == null) break;
 
             if (lines.isEmpty()) continue;
+            if (lines.matches("<ka>[mrMR]</ka>")) continue;
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -201,6 +207,8 @@ public class ServerThread extends Thread {
                 lastMessage = System.currentTimeMillis();
             }
 
+            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+
             // get message length & type
             String type = lines.substring(lines.length() - 1);
             lines = lines.substring(0, lines.length() - 1);
@@ -245,6 +253,8 @@ public class ServerThread extends Thread {
     private void turnLoop(PrintWriter out, BufferedReader in) throws IOException {
         // loops receiving messages and sending responses
 
+        lastActivity = System.currentTimeMillis();
+
         String lines;
         while(true) {
             try {
@@ -252,7 +262,10 @@ public class ServerThread extends Thread {
             } catch (InterruptedIOException e) {
                 lines = "";
             }
-            if (lines == null) break;
+            if (lines == null) {
+                game.setDisconnect(colour);
+                break;
+            }
 
             // check for disconnects
             if (game.getDisconnect() != Player.None) {
@@ -260,7 +273,19 @@ public class ServerThread extends Thread {
                 break;
             }
 
-            if (lines.isEmpty()) continue; // TODO keepalive
+            if (lines.isEmpty()) {
+                if (game.getCurrentPlayer() == colour) handleKeepAlive(out, in);
+                continue;
+            }
+
+            if (lines.matches("<ka>[mM]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                KeepAlive ka = new KeepAlive("r");
+                String xml = protocolMapper.serialize(ka);
+                out.println(xml);
+                continue;
+            }
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -392,6 +417,8 @@ public class ServerThread extends Thread {
                 lastMessage = System.currentTimeMillis();
             }
 
+            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+
             // get message length & type
             String type = lines.substring(lines.length() - 1);
             lines = lines.substring(0, lines.length() - 1);
@@ -494,6 +521,8 @@ public class ServerThread extends Thread {
                 retries = 0;
                 lastMessage = System.currentTimeMillis();
             }
+
+            if (lines.matches("<ka>[mrMR]</ka>")) continue;
 
             // get message length & type
             String type = lines.substring(lines.length() - 1);
@@ -600,6 +629,8 @@ public class ServerThread extends Thread {
                 continue;
             }
 
+            if (lines.matches("<ka>[mrMR]</ka>")) continue;
+
             // get message length & type
             String type = lines.substring(lines.length() - 1);
             lines = lines.substring(0, lines.length() - 1);
@@ -635,6 +666,93 @@ public class ServerThread extends Thread {
 
                 // once acknowledge is received, stop waiting
                 if (response.isAcknowledge()) break;
+            }
+        }
+    }
+
+
+    private void handleKeepAlive(PrintWriter out, BufferedReader in) throws IOException {
+        // sends a short message if to check the client is still connected
+        // during the player's turn, it is expected there will be no messages for a time
+        // but still need to check for disconnects
+
+        if (System.currentTimeMillis() >= lastActivity + KA_TIMEOUT) {
+            System.out.println((System.currentTimeMillis() - lastActivity) + " " + this.getName());
+
+            // send keep-alive
+            KeepAlive ka = new KeepAlive("m");
+            String xml = protocolMapper.serialize(ka);
+            out.println(xml);
+
+
+            // used for resending messages & disconnects
+            retries = 0;
+            lastMessage = System.currentTimeMillis();
+
+            String lines;
+            while(true) {
+                try {
+                    lines = in.readLine();
+                } catch (InterruptedIOException e) {
+                    lines = "";
+                }
+                if (lines == null) break;
+
+                // check for disconnects
+                if (game.getDisconnect() != Player.None) break;
+
+                if (lines.isEmpty()) {
+                    handleRetries(out, in, xml);
+                    continue;
+                }
+
+                if (lines.matches("<ka>[rR]</ka>")) {
+                    System.out.println(lines);
+                    lastActivity = System.currentTimeMillis();
+                    break;
+                }
+
+                // get message length & type
+                String type = lines.substring(lines.length() - 1);
+                lines = lines.substring(0, lines.length() - 1);
+
+                // read message
+                StringBuilder doc = new StringBuilder();
+                for (int i = 0; i < Integer.parseInt(lines); i++) {
+                    String inLine = in.readLine();
+                    inLine = inLine.replaceAll("\n", "").strip();
+                    doc.append(inLine);
+                }
+
+                // message type
+                if (type.equals("m")) {
+                    Message message = protocolMapper.deserializeMessage(doc.toString());
+
+                    // response is reject as only accepting 'acknowledge' responses
+                    Response r = new Response(message.getIdempotencyKey());
+                    if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
+                    else r.setDeny(new Deny("Expecting keep-alive"));
+
+                    // send response
+                    String r_xml = protocolMapper.serialize(r);
+                    out.println(r_xml.split("\n").length + "r");
+                    out.println(r_xml);
+                }
+
+                // response type
+                else if (type.equals("r")) {
+                    Response response = protocolMapper.deserializeResponse(doc.toString());
+
+                    // response is reject as only accepting 'acknowledge' responses
+                    Response r = new Response(response.getResponseTo());
+                    if (response.isMalformed()) r.setDeny(new Deny("Malformed"));
+                    else r.setDeny(new Deny("Expecting keep-alive"));
+
+                    // send response
+                    String r_xml = protocolMapper.serialize(r);
+                    out.println(r_xml.split("\n").length + "r");
+                    out.println(r_xml);
+                }
             }
         }
     }
