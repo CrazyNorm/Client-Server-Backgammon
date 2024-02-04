@@ -65,4 +65,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
+    implementation("com.fasterxml.woodstox:woodstox-core:6.5.1")
+    implementation("javax.xml.stream:stax-api:1.0-2")
 }
