@@ -187,7 +187,21 @@ public class ClientThread extends Thread {
     }
 
     private void handleNextTurn(PrintWriter out, BufferedReader in, Message m) {
-        handleGameOver(out, in);
+        // send acknowledge response, then process next turn
+        // needs to handle wins, swaps & disconnects
+
+        Response r = new Response(m.getIdempotencyKey());
+        r.setAcknowledge(new Acknowledge());
+        messageQueue.add(r);
+
+        NextTurn next = m.getNextTurn();
+        if (next.isWin() || next.isDisconnect()) {
+            handleGameOver(out, in); // todo: handle game over
+            return;
+        }
+//        if (next.isSwap())
+            // todo: view model swapHands()
+        // todo: view model nextTurn()
     }
 
     private void handleGameOver(PrintWriter out, BufferedReader in) {
