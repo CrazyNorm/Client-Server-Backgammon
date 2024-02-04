@@ -1,9 +1,6 @@
 package com.example.dominobackgammonclient.client;
 
-import com.example.dominobackgammonclient.client.pojo.KeepAlive;
-import com.example.dominobackgammonclient.client.pojo.Message;
-import com.example.dominobackgammonclient.client.pojo.PlayerPojo;
-import com.example.dominobackgammonclient.client.pojo.Response;
+import com.example.dominobackgammonclient.client.pojo.*;
 import com.example.dominobackgammonclient.client.xml.ProtocolMapper;
 import com.example.dominobackgammonclient.game.common.Game;
 
@@ -34,6 +31,7 @@ public class ClientThread extends Thread {
 
 
     private String name = "test";
+    private String opponent;
 
     private PlayerPojo colour;
     private Game game;
@@ -119,10 +117,10 @@ public class ClientThread extends Thread {
 
                     // find appropriate handler
                     if (m.isMalformed()) handleMalformed(out, in);
-                    else if (m.isStart()) handleStart(out, in);
-                    else if (m.isTurn()) handleTurn(out, in);
-                    else if (m.isReset()) handleReset(out, in);
-                    else if (m.isNextTurn()) handleNextTurn(out, in);
+                    else if (m.isStart()) handleStart(out, in, m);
+                    else if (m.isTurn()) handleTurn(out, in, m);
+                    else if (m.isReset()) handleReset(out, in, m);
+                    else if (m.isNextTurn()) handleNextTurn(out, in, m);
                 }
 
                 // response type
@@ -156,19 +154,25 @@ public class ClientThread extends Thread {
     }
 
 
-    private void handleStart(PrintWriter out, BufferedReader in) {
+    private void handleStart(PrintWriter out, BufferedReader in, Message m) {
+        // sends acknowledge response then starts game
+
+        Response r = new Response(m.getIdempotencyKey());
+        r.setAcknowledge(new Acknowledge());
+        messageQueue.add(r);
+
+        // todo: view model startGame()
+    }
+
+    private void handleTurn(PrintWriter out, BufferedReader in, Message m) {
 
     }
 
-    private void handleTurn(PrintWriter out, BufferedReader in) {
+    private void handleReset(PrintWriter out, BufferedReader in, Message m) {
 
     }
 
-    private void handleReset(PrintWriter out, BufferedReader in) {
-
-    }
-
-    private void handleNextTurn(PrintWriter out, BufferedReader in) {
+    private void handleNextTurn(PrintWriter out, BufferedReader in, Message m) {
         handleGameOver(out, in);
     }
 
