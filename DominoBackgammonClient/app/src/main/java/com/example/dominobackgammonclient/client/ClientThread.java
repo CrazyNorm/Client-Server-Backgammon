@@ -165,7 +165,14 @@ public class ClientThread extends Thread {
     }
 
     private void handleTurn(PrintWriter out, BufferedReader in, Message m) {
+        // applies turn, then sends hash response
+        // hash expects another response, but client can just ignore this
 
+        // todo: view model applyTurn()
+
+        Response r = new Response(m.getIdempotencyKey());
+        r.setHash(new Hash(game.checksum()));
+        messageQueue.add(r);
     }
 
     private void handleReset(PrintWriter out, BufferedReader in, Message m) {

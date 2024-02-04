@@ -314,6 +314,11 @@ public class Game {
     }
 
 
+    public String checksum() {
+        // generates a checksum hash for the game state
+        return "";
+    }
+
 
     public void generateValidMoves() {
         validMoves = new MoveTree();
