@@ -1,19 +1,18 @@
 package com.example.dominobackgammonclient.client.pojo;
 
-import com.example.dominobackgammonclient.game.common.Player;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 public class Win {
 
     @JacksonXmlProperty(isAttribute = true)
-    private final Player player;
+    private final PlayerPojo player;
     @JacksonXmlProperty(isAttribute = true)
     private final int type;
 
 
     public Win(
-            @JsonProperty("player") Player player,
+            @JsonProperty("player") PlayerPojo player,
             @JsonProperty("type") int type
     ) {
         this.player = player;
@@ -21,7 +20,7 @@ public class Win {
     }
 
 
-    public Player getPlayer() {
+    public PlayerPojo getPlayer() {
         return player;
     }
 

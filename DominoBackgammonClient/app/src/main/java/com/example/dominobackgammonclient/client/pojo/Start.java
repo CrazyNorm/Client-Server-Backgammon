@@ -1,6 +1,5 @@
 package com.example.dominobackgammonclient.client.pojo;
 
-import com.example.dominobackgammonclient.game.common.Player;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -9,12 +8,12 @@ public class Start {
     @JacksonXmlProperty(localName = "opponent", isAttribute = true)
     private final String opponentName;
     @JacksonXmlProperty(isAttribute = true)
-    private final Player colour;
+    private final PlayerPojo colour;
 
 
     public Start(
             @JsonProperty("opponent") String opponentName,
-            @JsonProperty("colour") Player colour
+            @JsonProperty("colour") PlayerPojo colour
     ) {
         this.opponentName = opponentName;
         this.colour = colour;
@@ -25,7 +24,7 @@ public class Start {
         return opponentName;
     }
 
-    public Player getColour() {
+    public PlayerPojo getColour() {
         return colour;
     }
 }

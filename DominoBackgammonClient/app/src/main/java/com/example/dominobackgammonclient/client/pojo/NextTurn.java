@@ -1,6 +1,5 @@
 package com.example.dominobackgammonclient.client.pojo;
 
-import com.example.dominobackgammonclient.game.common.Player;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -8,7 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 public class NextTurn {
 
     @JacksonXmlProperty(isAttribute = true)
-    private final Player next;
+    private final PlayerPojo next;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Win win;
@@ -19,13 +18,13 @@ public class NextTurn {
 
 
     public NextTurn(
-            @JsonProperty("next") Player next
+            @JsonProperty("next") PlayerPojo next
     ) {
         this.next = next;
     }
 
 
-    public Player getNext() {
+    public PlayerPojo getNext() {
         return next;
     }
 
