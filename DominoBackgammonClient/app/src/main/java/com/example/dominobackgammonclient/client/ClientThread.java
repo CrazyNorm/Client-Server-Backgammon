@@ -176,7 +176,14 @@ public class ClientThread extends Thread {
     }
 
     private void handleReset(PrintWriter out, BufferedReader in, Message m) {
+        // resets game state, then sends another hash response
+        // hash expects another response, but client can just ignore this
 
+        // todo: view model resetGame()
+
+        Response r = new Response(m.getIdempotencyKey());
+        r.setHash(new Hash(game.checksum()));
+        messageQueue.add(r);
     }
 
     private void handleNextTurn(PrintWriter out, BufferedReader in, Message m) {
