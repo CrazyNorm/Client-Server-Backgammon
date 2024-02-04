@@ -137,8 +137,8 @@ public class ClientThread extends Thread {
                     if (o instanceof Message m) {
                         if (m.isConnect())
                             sendConnect(out, in, xml);
-
-                        // todo: send turn from message queue
+                        if (m.isTurn())
+                            sendTurn(out, in, xml);
                     }
                     else if (o instanceof Response r) {
                         out.println(xml.split("\n").length + "m");
@@ -234,6 +234,62 @@ public class ClientThread extends Thread {
                 Response r = protocolMapper.deserializeResponse(doc.toString());
 
                 if (r.isApprove()) connected = true;
+                break;
+            }
+        }
+    }
+
+    private void sendTurn(PrintWriter out, BufferedReader in, String xml) throws IOException {
+        // sends a turn message, then waits for a response
+        // should be an approval, view model handles a deny
+        out.println(xml.split("\n").length + "m");
+        out.println(xml);
+
+        String lines;
+        while(true) {
+            try {
+                lines = in.readLine();
+            } catch (InterruptedIOException e) {
+                lines = "";
+            }
+            if (lines == null) break;
+
+            if (lines.isEmpty()) {
+                // todo: retries
+                continue;
+            }
+
+            // respond to keep-alive messages
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // server shouldn't be sending any messages now (if client is behaving), so just ignore messages
+
+            // response type
+            if (type.equals("r")) {
+                Response r = protocolMapper.deserializeResponse(doc.toString());
+
+//                if (!r.isApprove())
+                    // todo: view model turnDenied()
                 break;
             }
         }
