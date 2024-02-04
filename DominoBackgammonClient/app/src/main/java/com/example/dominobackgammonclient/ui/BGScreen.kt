@@ -8,15 +8,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dominobackgammonclient.game.common.Player
 import com.example.dominobackgammonclient.ui.board.Board
-import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.common.ControlButtons
 import com.example.dominobackgammonclient.ui.common.PlayerStats
 import com.example.dominobackgammonclient.ui.dominoes.DominoList
+import com.example.dominobackgammonclient.ui.theme.DarkGreen
+import com.example.dominobackgammonclient.ui.theme.DarkRed
 
 @Composable
 fun BGScreen(
@@ -27,7 +27,7 @@ fun BGScreen(
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
-            .background(Color(0xFF00BCD4))
+            .background(DarkGreen)
             .padding(vertical = 10.dp)
     ) {
 
@@ -66,7 +66,7 @@ fun BGScreen(
                 highlightedPoints = gameState.highlightedMoves,
                 onClickPoint = { p -> bgViewModel.selectPiece(p) },
                 modifier = Modifier
-                    .background(Color(0xFF673AB7))
+                    .background(DarkRed)
                     .weight(.5f)
             )
 
