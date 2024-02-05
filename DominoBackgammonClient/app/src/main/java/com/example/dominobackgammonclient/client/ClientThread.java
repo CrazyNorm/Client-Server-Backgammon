@@ -7,13 +7,16 @@ import com.example.dominobackgammonclient.game.common.Game;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.*;
 
 public class ClientThread extends Thread {
 
     private final Socket socket;
     private final Queue<Object> messageQueue;
+
+    // idempotence handling
+    private final Map<String, String> responseLog;
+    private final Set<String> usedTokens;
 
 
     private final ProtocolMapper protocolMapper = new ProtocolMapper();
@@ -40,6 +43,8 @@ public class ClientThread extends Thread {
     public ClientThread(Socket socket) {
         this.socket = socket;
         this.messageQueue = new ArrayDeque<>();
+        this.responseLog = new HashMap<>();
+        this.usedTokens = new HashSet<>();
     }
 
     public String getPlayerName() {
@@ -52,6 +57,7 @@ public class ClientThread extends Thread {
     }
 
     public void queueMessage(Message m) {
+        m.setIdempotencyKey(newIdemToken());
         messageQueue.add(m);
     }
 
@@ -115,6 +121,18 @@ public class ClientThread extends Thread {
                 if (type.equals("m")) {
                     Message m = protocolMapper.deserializeMessage(doc.toString());
 
+                    // check idempotency
+                    String idem_tok = m.getIdempotencyKey();
+                    usedTokens.add(idem_tok);
+                    if (responseLog.containsKey(idem_tok)) {
+                        String xml = responseLog.get(idem_tok);
+                        if (xml != null) {
+                            out.println(xml.split("\n").length + "r");
+                            out.println(xml);
+                        }
+                        continue;
+                    }
+
                     // find appropriate handler
                     if (m.isMalformed()) handleMalformed(out, in);
                     else if (m.isStart()) handleStart(out, in, m);
@@ -141,6 +159,7 @@ public class ClientThread extends Thread {
                             sendTurn(out, in, xml);
                     }
                     else if (o instanceof Response r) {
+                        responseLog.put(r.getResponseTo(), xml);
                         out.println(xml.split("\n").length + "m");
                         out.println(xml);
                     }
@@ -321,5 +340,17 @@ public class ClientThread extends Thread {
                 break;
             }
         }
+    }
+
+
+    private String newIdemToken() {
+        // generates a new random idempotency key
+        String idem = UUID.randomUUID().toString();
+
+        // check if token has already been used (incredibly unlikely but safer to check)
+        while (usedTokens.contains(idem)) idem = UUID.randomUUID().toString();
+
+        usedTokens.add(idem);
+        return idem;
     }
 }

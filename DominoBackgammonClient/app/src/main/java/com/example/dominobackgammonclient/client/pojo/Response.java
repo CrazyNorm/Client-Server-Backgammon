@@ -10,7 +10,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 public class Response {
 
     @JacksonXmlProperty(localName = "to", isAttribute = true)
-    private final long responseTo;
+    private final String responseTo;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Approve approve; // server
@@ -23,17 +23,17 @@ public class Response {
 
 
     public Response() {
-        this(0L);
+        this("");
     }
 
     public Response(
-            @JsonProperty("to") long responseTo
+            @JsonProperty("to") String responseTo
     ) {
         this.responseTo = responseTo;
     }
 
 
-    public long getResponseTo() {
+    public String getResponseTo() {
         return responseTo;
     }
 

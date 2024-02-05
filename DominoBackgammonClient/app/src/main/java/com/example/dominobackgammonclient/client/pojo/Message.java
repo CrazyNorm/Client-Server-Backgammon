@@ -10,7 +10,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 public class Message {
 
     @JacksonXmlProperty(localName = "idem_key", isAttribute = true)
-    private final long idempotencyKey;
+    private String idempotencyKey;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Connect connect; // client
@@ -25,18 +25,22 @@ public class Message {
 
 
     public Message() {
-        this(0L);
+        this("");
     }
 
     public Message(
-            @JsonProperty("idem_key") long idempotencyKey
+            @JsonProperty("idem_key") String idempotencyKey
     ) {
         this.idempotencyKey = idempotencyKey;
     }
 
 
-    public long getIdempotencyKey() {
+    public String getIdempotencyKey() {
         return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public TurnPojo getTurn() {
