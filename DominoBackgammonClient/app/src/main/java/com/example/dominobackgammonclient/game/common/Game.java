@@ -99,6 +99,10 @@ public class Game {
         else return opponentColour;
     }
 
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
     public List<Integer> getHighlightedMoves() {
         return highlightedMoves;
     }

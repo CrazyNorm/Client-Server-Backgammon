@@ -85,12 +85,12 @@ public class ClientThread extends Thread {
                     lines = "";
                 }
                 if (lines == null || !connected) {
-                    // todo: handle disconnect from server
+                    handleDisconnect(out, in);
                     break;
                 }
 
                 if (lines.isEmpty()) {
-                    // todo: send keep-alives during turns
+                    handleKeepAlive(out, in);
                     continue;
                 }
 
@@ -225,7 +225,7 @@ public class ClientThread extends Thread {
     }
 
     private void handleDisconnect(PrintWriter out, BufferedReader in) {
-
+        // todo: view model disconnect()?
     }
 
     private void handleMalformed(PrintWriter out, BufferedReader in) {
@@ -362,6 +362,53 @@ public class ClientThread extends Thread {
         }
         if (retries >= MAX_RETRIES) {
             connected = false;
+        }
+    }
+
+    private void handleKeepAlive(PrintWriter out, BufferedReader in) throws IOException {
+        // sends a short message if to check the client is still connected to the server
+        // during the player's turn, it is expected there will be no messages for a time
+        // but still need to check for disconnects
+
+        if (System.currentTimeMillis() >= lastActivity + KA_TIMEOUT) {
+            System.out.println((System.currentTimeMillis() - lastActivity) + " " + this.getName());
+
+            // send keep-alive
+            KeepAlive ka = new KeepAlive("m");
+            String xml = protocolMapper.serialize(ka);
+            out.println(xml);
+
+
+            // used for resending messages & disconnects
+            retries = 0;
+            lastMessage = System.currentTimeMillis();
+
+            String lines;
+            while(true) {
+                try {
+                    lines = in.readLine();
+                } catch (InterruptedIOException e) {
+                    lines = "";
+                }
+                if (lines == null) break;
+
+                // check for disconnects
+                if (!connected) break;
+
+                if (lines.isEmpty()) {
+                    handleRetries(out, in, xml);
+                    continue;
+                }
+
+                if (lines.matches("<ka>[mrMR]</ka>")) {
+                    lastActivity = System.currentTimeMillis();
+                    if (lines.matches("<ka>[rR]</ka>")) break;
+
+                    // send keep-alive
+                    KeepAlive ka_r = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka_r));
+                }
+            }
         }
     }
 
