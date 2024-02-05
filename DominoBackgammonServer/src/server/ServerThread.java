@@ -17,7 +17,8 @@ public class ServerThread extends Thread {
     private final Queue<Object> messageQueue;
 
     // idempotence handling
-    private final HashMap<String, String> responseLog;
+    private final Map<String, String> responseLog;
+    private final Set<String> usedTokens;
 
     private final List<Queue<Object>> otherPlayers;
 
@@ -46,6 +47,7 @@ public class ServerThread extends Thread {
         this.socket = socket;
         this.messageQueue = new ArrayDeque<>();
         this.responseLog = new HashMap<>();
+        this.usedTokens = new HashSet<>();
         this.otherPlayers = new ArrayList<>();
     }
 
@@ -144,6 +146,7 @@ public class ServerThread extends Thread {
 
                 // check idempotency
                 String idem_tok = message.getIdempotencyKey();
+                usedTokens.add(idem_tok);
                 if (responseLog.containsKey(idem_tok)) {
                     String xml = responseLog.get(idem_tok);
                     out.println(xml.split("\n").length + "r");
@@ -200,7 +203,7 @@ public class ServerThread extends Thread {
 
     private void sendStart(PrintWriter out, BufferedReader in) throws IOException {
         // sends a start message then waits to receive an 'acknowledge' response
-        Message start = new Message();
+        Message start = new Message(newIdemToken());
         start.setStart(new Start(opponent, colour));
 
         String start_xml = protocolMapper.serialize(start);
@@ -258,6 +261,7 @@ public class ServerThread extends Thread {
 
                 // check idempotency
                 String idem_tok = message.getIdempotencyKey();
+                usedTokens.add(idem_tok);
                 if (responseLog.containsKey(idem_tok)) {
                     String xml = responseLog.get(idem_tok);
                     out.println(xml.split("\n").length + "r");
@@ -350,6 +354,7 @@ public class ServerThread extends Thread {
 
                 // check idempotency
                 String idem_tok = m.getIdempotencyKey();
+                usedTokens.add(idem_tok);
                 if (responseLog.containsKey(idem_tok)) {
                     String xml = responseLog.get(idem_tok);
                     out.println(xml.split("\n").length + "r");
@@ -370,6 +375,7 @@ public class ServerThread extends Thread {
 
                 // if approved, forward turn to all players
                 if (r.isApprove()) {
+                    m.setIdempotencyKey(newIdemToken());
                     messageQueue.add(m);
                     for (Queue<Object> queue: otherPlayers)
                         queue.add(m);
@@ -381,11 +387,24 @@ public class ServerThread extends Thread {
 
             // response type
             else if (type.equals("r")) {
+                Response response = protocolMapper.deserializeResponse(doc.toString());
+
                 Response r = new Response();
-                r.setDeny(new Deny("Unprompted response"));
+                // always validate hashes, even if unexpected
+                boolean reset = false;
+                if (!response.isHash()) r.setDeny(new Deny("Unprompted response"));
+                else if (!response.getHash().getValue().equals(game.checksum())) {
+                    r.setDeny(new Deny("Inconsistent"));
+                    reset = true;
+                } else r.setApprove(new Approve());
 
                 // queue response
                 messageQueue.add(r);
+                if (reset) {
+                    Message resetMessage = new Message("");
+                    resetMessage.setReset(new Reset());
+                    messageQueue.add(resetMessage);
+                }
             }
 
 
@@ -393,7 +412,7 @@ public class ServerThread extends Thread {
             if (validTurn) {
                 game.nextTurn();
                 // generate next turn message
-                Message m = new Message();
+                Message m = new Message(newIdemToken());
                 NextTurn next = new NextTurn(game.getCurrentPlayer());
 
                 if (game.checkHands()) next.setSwap(new Swap());
@@ -421,7 +440,6 @@ public class ServerThread extends Thread {
                 Object o = messageQueue.poll();
                 String xml = protocolMapper.serialize(o);
                 if (o instanceof Message m) {
-                    responseLog.put(m.getIdempotencyKey(), xml);
                     if (m.isTurn())
                         sendTurn(out, in, xml);
                     else if (m.isNextTurn()) {
@@ -430,6 +448,7 @@ public class ServerThread extends Thread {
                     }
                 }
                 else if (o instanceof Response r) {
+                    responseLog.put(r.getResponseTo(), xml);
                     out.println(xml.split("\n").length + "m");
                     out.println(xml);
                 }
@@ -497,6 +516,7 @@ public class ServerThread extends Thread {
 
                 // check idempotency
                 String idem_tok = message.getIdempotencyKey();
+                usedTokens.add(idem_tok);
                 if (responseLog.containsKey(idem_tok)) {
                     String xml_i = responseLog.get(idem_tok);
                     out.println(xml_i.split("\n").length + "r");
@@ -536,6 +556,7 @@ public class ServerThread extends Thread {
                 out.println(r_xml);
 
                 if (r.isApprove()) {
+                    //
                     responseLog.put(response.getResponseTo(), r_xml);
                     break;
                 }
@@ -550,7 +571,7 @@ public class ServerThread extends Thread {
         // generates and sends a reset message
         // doesn't expect a response, but will keep sending resets until it receives the correct hash for the turn
 
-        Message reset = new Message();
+        Message reset = new Message(newIdemToken());
         reset.setReset(new Reset(
                 Arrays.asList(
                         new PieceList(Player.White, game.getPieces(Player.White)),
@@ -623,6 +644,7 @@ public class ServerThread extends Thread {
 
                 // check idempotency
                 String idem_tok = message.getIdempotencyKey();
+                usedTokens.add(idem_tok);
                 if (responseLog.containsKey(idem_tok)) {
                     String xml_i = responseLog.get(idem_tok);
                     out.println(xml_i.split("\n").length + "r");
@@ -646,7 +668,24 @@ public class ServerThread extends Thread {
             else if (type.equals("r")) {
                 Response response = protocolMapper.deserializeResponse(doc.toString());
 
-                // doesn't need a response
+                // always validate hashes, even if unexpected
+                if (response.isHash()) {
+                    Response r = new Response();
+                    boolean reset = false;
+                    if (!response.getHash().getValue().equals(game.checksum())) {
+                        r.setDeny(new Deny("Inconsistent"));
+                        reset = true;
+                    } else r.setApprove(new Approve());
+
+
+                    // send response
+                    String r_xml = protocolMapper.serialize(r);
+                    out.println(r_xml.split("\n").length + "r");
+                    out.println(r_xml);
+                    if (reset) sendReset(out, in);
+                }
+
+                // otherwise, doesn't need a response
 
                 // once acknowledge is received, stop waiting
                 if (response.isAcknowledge()) break;
@@ -682,7 +721,7 @@ public class ServerThread extends Thread {
         // generate & send 'next turn' disconnect message
         // waits for an 'acknowledge' response from all but the disconnecting player
 
-        Message m = new Message();
+        Message m = new Message(newIdemToken());
         NextTurn next = new NextTurn(game.getDisconnect());
         next.setDisconnect(new Disconnect());
 
@@ -748,6 +787,7 @@ public class ServerThread extends Thread {
 
                 // check idempotency
                 String idem_tok = message.getIdempotencyKey();
+                usedTokens.add(idem_tok);
                 if (responseLog.containsKey(idem_tok)) {
                     String xml_i = responseLog.get(idem_tok);
                     out.println(xml_i.split("\n").length + "r");
@@ -771,7 +811,24 @@ public class ServerThread extends Thread {
             else if (type.equals("r")) {
                 Response response = protocolMapper.deserializeResponse(doc.toString());
 
-                // doesn't need a response
+                // always validate hashes, even if unexpected
+                if (response.isHash()) {
+                    Response r = new Response();
+                    boolean reset = false;
+                    if (!response.getHash().getValue().equals(game.checksum())) {
+                        r.setDeny(new Deny("Inconsistent"));
+                        reset = true;
+                    } else r.setApprove(new Approve());
+
+
+                    // send response
+                    String r_xml = protocolMapper.serialize(r);
+                    out.println(r_xml.split("\n").length + "r");
+                    out.println(r_xml);
+                    if (reset) sendReset(out, in);
+                }
+
+                // otherwise, doesn't need a response
 
                 // once acknowledge is received, stop waiting
                 if (response.isAcknowledge()) break;
@@ -844,6 +901,7 @@ public class ServerThread extends Thread {
 
                     // check idempotency
                     String idem_tok = message.getIdempotencyKey();
+                    usedTokens.add(idem_tok);
                     if (responseLog.containsKey(idem_tok)) {
                         String xml_i = responseLog.get(idem_tok);
                         out.println(xml_i.split("\n").length + "r");
@@ -851,7 +909,7 @@ public class ServerThread extends Thread {
                         continue;
                     }
 
-                    // response is reject as only accepting 'acknowledge' responses
+                    // response is reject as only accepting 'keep-alive' responses
                     Response r = new Response(idem_tok);
                     if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                     else r.setDeny(new Deny("Expecting keep-alive"));
@@ -867,7 +925,25 @@ public class ServerThread extends Thread {
                 else if (type.equals("r")) {
                     Response response = protocolMapper.deserializeResponse(doc.toString());
 
-                    // response is reject as only accepting 'acknowledge' responses
+                    // always validate hashes, even if unexpected
+                    if (response.isHash()) {
+                        Response r = new Response();
+                        boolean reset = false;
+                        if (!response.getHash().getValue().equals(game.checksum())) {
+                            r.setDeny(new Deny("Inconsistent"));
+                            reset = true;
+                        } else r.setApprove(new Approve());
+
+
+                        // send response
+                        String r_xml = protocolMapper.serialize(r);
+                        out.println(r_xml.split("\n").length + "r");
+                        out.println(r_xml);
+                        if (reset) sendReset(out, in);
+                        continue;
+                    }
+
+                    // otherwise, response is reject as only accepting 'keep-alive' responses
                     Response r = new Response(response.getResponseTo());
                     if (response.isMalformed()) r.setDeny(new Deny("Malformed"));
                     else r.setDeny(new Deny("Expecting keep-alive"));
@@ -879,5 +955,17 @@ public class ServerThread extends Thread {
                 }
             }
         }
+    }
+
+
+    private String newIdemToken() {
+        // generates a new random idempotency key
+        String idem = UUID.randomUUID().toString();
+
+        // check if token has already been used (incredibly unlikely but safer to check)
+        while (usedTokens.contains(idem)) idem = UUID.randomUUID().toString();
+
+        usedTokens.add(idem);
+        return idem;
     }
 }
