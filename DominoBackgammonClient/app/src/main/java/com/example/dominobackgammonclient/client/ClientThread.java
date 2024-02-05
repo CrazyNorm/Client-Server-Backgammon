@@ -84,7 +84,7 @@ public class ClientThread extends Thread {
                 } catch (InterruptedIOException e) {
                     lines = "";
                 }
-                if (lines == null) {
+                if (lines == null || !connected) {
                     // todo: handle disconnect from server
                     break;
                 }
@@ -141,10 +141,7 @@ public class ClientThread extends Thread {
                     else if (m.isNextTurn()) handleNextTurn(out, in, m);
                 }
 
-                // response type
-                else if (type.equals("r")) {
-                    // todo: unexpected response?
-                }
+                // just ignore unexpected responses, wouldn't know what to do with them anyway
 
 
                 // send any messages from the message queue
@@ -227,6 +224,10 @@ public class ClientThread extends Thread {
 
     }
 
+    private void handleDisconnect(PrintWriter out, BufferedReader in) {
+
+    }
+
     private void handleMalformed(PrintWriter out, BufferedReader in) {
 
     }
@@ -247,8 +248,11 @@ public class ClientThread extends Thread {
             if (lines == null) break;
 
             if (lines.isEmpty()) {
-                // todo: retries
+                handleRetries(out, in, xml);
                 continue;
+            } else {
+                retries = 0;
+                lastMessage = System.currentTimeMillis();
             }
 
             // respond to keep-alive messages
@@ -302,8 +306,11 @@ public class ClientThread extends Thread {
             if (lines == null) break;
 
             if (lines.isEmpty()) {
-                // todo: retries
+                handleRetries(out, in, xml);
                 continue;
+            } else {
+                retries = 0;
+                lastMessage = System.currentTimeMillis();
             }
 
             // respond to keep-alive messages
@@ -339,6 +346,22 @@ public class ClientThread extends Thread {
                     // todo: view model turnDenied()
                 break;
             }
+        }
+    }
+
+
+    private void handleRetries(PrintWriter out, BufferedReader in, String xml) {
+        // resends a message if timeout has been reached, and then check for disconnects
+
+        // check for timeouts
+        if (System.currentTimeMillis() >= lastMessage + TIMEOUT) {
+            lastMessage = System.currentTimeMillis();
+            retries++;
+            out.println(xml.split("\n").length + "m");
+            out.println(xml);
+        }
+        if (retries >= MAX_RETRIES) {
+            connected = false;
         }
     }
 
