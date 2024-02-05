@@ -16,6 +16,9 @@ public class ServerThread extends Thread {
 
     private final Queue<Object> messageQueue;
 
+    // idempotence handling
+    private final HashMap<String, String> responseLog;
+
     private final List<Queue<Object>> otherPlayers;
 
     private final ProtocolMapper protocolMapper = new ProtocolMapper();
@@ -42,6 +45,7 @@ public class ServerThread extends Thread {
     public ServerThread(Socket socket) {
         this.socket = socket;
         this.messageQueue = new ArrayDeque<>();
+        this.responseLog = new HashMap<>();
         this.otherPlayers = new ArrayList<>();
     }
 
@@ -77,7 +81,7 @@ public class ServerThread extends Thread {
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
-            // wait to recieve connect message before continuing
+            // wait to receive connect message before continuing
             handleConnect(out, in);
 
             // wait for server to start the game
@@ -138,14 +142,24 @@ public class ServerThread extends Thread {
             if (type.equals("m")) {
                 Message message = protocolMapper.deserializeMessage(doc.toString());
 
+                // check idempotency
+                String idem_tok = message.getIdempotencyKey();
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml = responseLog.get(idem_tok);
+                    out.println(xml.split("\n").length + "r");
+                    out.println(xml);
+                    continue;
+                }
+
                 // find appropriate response
-                Response r = new Response(message.getIdempotencyKey());
+                Response r = new Response(idem_tok);
                 if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else if (!message.isConnect()) r.setDeny(new Deny("Connect first"));
                 else r.setApprove(new Approve());
 
                 // send response
                 String xml = protocolMapper.serialize(r);
+                responseLog.put(idem_tok, xml);
                 out.println(xml.split("\n").length + "r");
                 out.println(xml);
 
@@ -242,13 +256,23 @@ public class ServerThread extends Thread {
             if (type.equals("m")) {
                 Message message = protocolMapper.deserializeMessage(doc.toString());
 
+                // check idempotency
+                String idem_tok = message.getIdempotencyKey();
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml = responseLog.get(idem_tok);
+                    out.println(xml.split("\n").length + "r");
+                    out.println(xml);
+                    continue;
+                }
+
                 // response is reject as only accepting 'acknowledge' responses
-                Response r = new Response(message.getIdempotencyKey());
+                Response r = new Response(idem_tok);
                 if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else r.setDeny(new Deny("Game hasn't started"));
 
                 // send response
                 String xml = protocolMapper.serialize(r);
+                responseLog.put(idem_tok, xml);
                 out.println(xml.split("\n").length + "r");
                 out.println(xml);
             }
@@ -324,8 +348,17 @@ public class ServerThread extends Thread {
             if (type.equals("m")) {
                 Message m = protocolMapper.deserializeMessage(doc.toString());
 
+                // check idempotency
+                String idem_tok = m.getIdempotencyKey();
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml = responseLog.get(idem_tok);
+                    out.println(xml.split("\n").length + "r");
+                    out.println(xml);
+                    continue;
+                }
+
                 // find appropriate response
-                Response r = new Response(m.getIdempotencyKey());
+                Response r = new Response(idem_tok);
                 if (m.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else if (!m.isTurn()) r.setDeny(new Deny("Wrong message"));
                 else if (m.getTurn().getPlayer() != colour) r.setDeny(new Deny("Wrong player"));
@@ -388,6 +421,7 @@ public class ServerThread extends Thread {
                 Object o = messageQueue.poll();
                 String xml = protocolMapper.serialize(o);
                 if (o instanceof Message m) {
+                    responseLog.put(m.getIdempotencyKey(), xml);
                     if (m.isTurn())
                         sendTurn(out, in, xml);
                     else if (m.isNextTurn()) {
@@ -461,13 +495,23 @@ public class ServerThread extends Thread {
             if (type.equals("m")) {
                 Message message = protocolMapper.deserializeMessage(doc.toString());
 
+                // check idempotency
+                String idem_tok = message.getIdempotencyKey();
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml_i = responseLog.get(idem_tok);
+                    out.println(xml_i.split("\n").length + "r");
+                    out.println(xml_i);
+                    continue;
+                }
+
                 // response is reject as only accepting 'hash' responses
-                Response r = new Response(message.getIdempotencyKey());
+                Response r = new Response(idem_tok);
                 if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else r.setDeny(new Deny("Expecting response"));
 
                 // send response
                 String r_xml = protocolMapper.serialize(r);
+                responseLog.put(idem_tok, r_xml);
                 out.println(r_xml.split("\n").length + "r");
                 out.println(r_xml);
             }
@@ -491,7 +535,10 @@ public class ServerThread extends Thread {
                 out.println(r_xml.split("\n").length + "r");
                 out.println(r_xml);
 
-                if (r.isApprove()) break;
+                if (r.isApprove()) {
+                    responseLog.put(response.getResponseTo(), r_xml);
+                    break;
+                }
                 else if (reset) sendReset(out, in);
             }
         }
@@ -509,8 +556,8 @@ public class ServerThread extends Thread {
                         new PieceList(Player.White, game.getPieces(Player.White)),
                         new PieceList(Player.Black, game.getPieces(Player.Black))
                 ), Arrays.asList(
-                        new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White)),
-                        new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White))
+                new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White)),
+                new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White))
         )));
 
         String xml = protocolMapper.serialize(reset);
@@ -574,13 +621,23 @@ public class ServerThread extends Thread {
             if (type.equals("m")) {
                 Message message = protocolMapper.deserializeMessage(doc.toString());
 
+                // check idempotency
+                String idem_tok = message.getIdempotencyKey();
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml_i = responseLog.get(idem_tok);
+                    out.println(xml_i.split("\n").length + "r");
+                    out.println(xml_i);
+                    continue;
+                }
+
                 // response is reject as only accepting 'acknowledge' responses
-                Response r = new Response(message.getIdempotencyKey());
+                Response r = new Response(idem_tok);
                 if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else r.setDeny(new Deny("Expecting response"));
 
                 // send response
                 String r_xml = protocolMapper.serialize(r);
+                responseLog.put(idem_tok, r_xml);
                 out.println(r_xml.split("\n").length + "r");
                 out.println(r_xml);
             }
@@ -689,13 +746,23 @@ public class ServerThread extends Thread {
             if (type.equals("m")) {
                 Message message = protocolMapper.deserializeMessage(doc.toString());
 
+                // check idempotency
+                String idem_tok = message.getIdempotencyKey();
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml_i = responseLog.get(idem_tok);
+                    out.println(xml_i.split("\n").length + "r");
+                    out.println(xml_i);
+                    continue;
+                }
+
                 // response is reject as only accepting 'acknowledge' responses
-                Response r = new Response(message.getIdempotencyKey());
+                Response r = new Response(idem_tok);
                 if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else r.setDeny(new Deny("Expecting response"));
 
                 // send response
                 String r_xml = protocolMapper.serialize(r);
+                responseLog.put(idem_tok, r_xml);
                 out.println(r_xml.split("\n").length + "r");
                 out.println(r_xml);
             }
@@ -748,7 +815,6 @@ public class ServerThread extends Thread {
                     continue;
                 }
 
-
                 if (lines.matches("<ka>[mrMR]</ka>")) {
                     lastActivity = System.currentTimeMillis();
                     if (lines.matches("<ka>[rR]</ka>")) break;
@@ -758,7 +824,6 @@ public class ServerThread extends Thread {
                     out.println(protocolMapper.serialize(ka_r));
                     continue;
                 }
-
 
 
                 // get message length & type
@@ -777,13 +842,23 @@ public class ServerThread extends Thread {
                 if (type.equals("m")) {
                     Message message = protocolMapper.deserializeMessage(doc.toString());
 
+                    // check idempotency
+                    String idem_tok = message.getIdempotencyKey();
+                    if (responseLog.containsKey(idem_tok)) {
+                        String xml_i = responseLog.get(idem_tok);
+                        out.println(xml_i.split("\n").length + "r");
+                        out.println(xml_i);
+                        continue;
+                    }
+
                     // response is reject as only accepting 'acknowledge' responses
-                    Response r = new Response(message.getIdempotencyKey());
+                    Response r = new Response(idem_tok);
                     if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                     else r.setDeny(new Deny("Expecting keep-alive"));
 
                     // send response
                     String r_xml = protocolMapper.serialize(r);
+                    responseLog.put(idem_tok, r_xml);
                     out.println(r_xml.split("\n").length + "r");
                     out.println(r_xml);
                 }

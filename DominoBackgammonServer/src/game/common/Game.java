@@ -50,7 +50,6 @@ public class Game {
     }
 
     private boolean checkMove(int start, int end) {
-        // TODO check for using wrong number of moves
         // check the current player doesn't have any pieces to enter first
         if (boardState.getBarCount(currentPlayer) > 0) return false;
         // check for trying to move the back men before turn 4
@@ -271,6 +270,7 @@ public class Game {
 
 
     public boolean checkTurn(TurnPojo turn) {
+        // TODO check for using wrong number of moves
         // checks an entire turn is valid & applies it if it is
 
         // check correct player
