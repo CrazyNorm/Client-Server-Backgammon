@@ -22,6 +22,7 @@ public class DBGServer {
         try(ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (listening) {
                 ServerThread tempThread = new ServerThread(serverSocket.accept());
+                System.out.println("new client");
                 threadList.add(tempThread);
                 tempThread.start();
             }
@@ -56,5 +57,12 @@ public class DBGServer {
         }
         else
             queue.add(thread);
+    }
+
+
+    public static void leaveQueue(ServerThread thread) {
+        // leave game matching queue when client disconnects
+
+        queue.remove(thread);
     }
 }

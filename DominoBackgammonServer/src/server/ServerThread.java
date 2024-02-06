@@ -87,22 +87,21 @@ public class ServerThread extends Thread {
             handleConnect(out, in);
 
             // wait for server to start the game
-            if (game == null)
-                synchronized (socket) {
-                    socket.wait();
-                }
-            // send start message
-            sendStart(out, in);
+            waitForStart(out, in);
 
-            // main server game loop
-            turnLoop(out, in);
+            if (game != null) {
+                // send start message
+                sendStart(out, in);
+
+                // main server game loop
+                turnLoop(out, in);
+            }
 
         } catch (IOException e) {
             System.err.println("Exception listening for connection");
             System.err.println(e.getMessage());
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
+        System.out.println(name + " disconnected");
     }
 
     private void handleConnect(PrintWriter out, BufferedReader in) throws IOException {
@@ -171,6 +170,7 @@ public class ServerThread extends Thread {
                     name = message.getConnect().getPlayerName();
                     DBGServer.joinQueue(this);
                     connected = true;
+                    System.out.println(name + " connected");
                     break;
                 }
             }
@@ -192,12 +192,94 @@ public class ServerThread extends Thread {
     }
 
 
+    private void waitForStart(PrintWriter out, BufferedReader in) throws IOException {
+        // handles keep-alives while waiting for an opponent
+
+        lastActivity = System.currentTimeMillis();
+
+        String lines;
+        while(game == null) {
+            try {
+                lines = in.readLine();
+            } catch (InterruptedIOException e) {
+                lines = "";
+            }
+            if (lines == null || !connected) {
+                DBGServer.leaveQueue(this);
+                break;
+            }
+
+            if (lines.isEmpty()) {
+                handleKeepAlive(out, in);
+                continue;
+            }
+
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                lastActivity = System.currentTimeMillis();
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // message type
+            if (type.equals("m")) {
+                Message m = protocolMapper.deserializeMessage(doc.toString());
+
+                // check idempotency
+                String idem_tok = m.getIdempotencyKey();
+                usedTokens.add(idem_tok);
+                if (responseLog.containsKey(idem_tok)) {
+                    String xml = responseLog.get(idem_tok);
+                    out.println(xml.split("\n").length + "r");
+                    out.println(xml);
+                    continue;
+                }
+
+                // always reject as shouldn't be sending anything yet
+                Response r = new Response(idem_tok);
+                r.setDeny(new Deny("Game hasn't started yet"));
+
+                // send response
+                String xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+            }
+
+            // response type
+            else if (type.equals("r")) {
+                Response response = protocolMapper.deserializeResponse(doc.toString());
+
+                // always reject as shouldn't be sending anything yet
+                Response r = new Response(response.getResponseTo());
+                r.setDeny(new Deny("Game hasn't started yet"));
+
+                // send response
+                String xml = protocolMapper.serialize(r);
+                out.println(xml.split("\n").length + "r");
+                out.println(xml);
+            }
+        }
+    }
+
+
     public void startGame(Player colour, Game game) {
         this.colour = colour;
         this.game = game;
-        synchronized (socket) {
-            socket.notify();
-        }
     }
 
 
@@ -700,7 +782,7 @@ public class ServerThread extends Thread {
 
         // check for timeouts
         if (System.currentTimeMillis() >= lastMessage + TIMEOUT) {
-            System.out.println((System.currentTimeMillis() - lastMessage) + " " + retries);
+//            System.out.println((System.currentTimeMillis() - lastMessage) + " " + retries);
             lastMessage = System.currentTimeMillis();
             retries++;
             out.println(xml.split("\n").length + "m");
@@ -712,7 +794,7 @@ public class ServerThread extends Thread {
             if (game.getDisconnect() == Player.None)
                 // only inform other players of a disconnect if no other players have disconnected
                 // use shared game object to inform all players of the disconnect
-                game.setDisconnect(colour);
+                if (game != null) game.setDisconnect(colour);
         }
     }
 
@@ -843,7 +925,7 @@ public class ServerThread extends Thread {
         // but still need to check for disconnects
 
         if (System.currentTimeMillis() >= lastActivity + KA_TIMEOUT) {
-            System.out.println((System.currentTimeMillis() - lastActivity) + " " + this.getName());
+//            System.out.println((System.currentTimeMillis() - lastActivity) + " " + this.getName());
 
             // send keep-alive
             KeepAlive ka = new KeepAlive("m");
@@ -865,7 +947,8 @@ public class ServerThread extends Thread {
                 if (lines == null) break;
 
                 // check for disconnects
-                if (game.getDisconnect() != Player.None) break;
+                if (game != null && game.getDisconnect() != Player.None) break;
+                if (!connected) break;
 
                 if (lines.isEmpty()) {
                     handleRetries(out, in, xml);
