@@ -3,15 +3,22 @@ package com.example.dominobackgammonclient.client;
 import com.example.dominobackgammonclient.client.pojo.*;
 import com.example.dominobackgammonclient.client.xml.ProtocolMapper;
 import com.example.dominobackgammonclient.game.common.Game;
+import com.example.dominobackgammonclient.ui.BGViewModel;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.*;
 
 public class ClientThread extends Thread {
 
-    private final Socket socket;
+    private final String address;
+    private static int PORT = 8081;
+
+    private final BGViewModel viewModel;
+
+    private Socket socket;
     private final Queue<Object> messageQueue;
 
     // idempotence handling
@@ -39,12 +46,22 @@ public class ClientThread extends Thread {
     private PlayerPojo colour;
     private Game game;
     private boolean connected = false;
+    private boolean disconnected = false;
 
-    public ClientThread(Socket socket) {
-        this.socket = socket;
+    public ClientThread(String address, BGViewModel viewModel) {
+        this.address = address;
+        this.viewModel = viewModel;
         this.messageQueue = new ArrayDeque<>();
         this.responseLog = new HashMap<>();
         this.usedTokens = new HashSet<>();
+    }
+
+    public boolean isConnected() {
+        return (connected && !disconnected);
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
     }
 
     public String getPlayerName() {
@@ -64,6 +81,22 @@ public class ClientThread extends Thread {
 
     @Override
     public void run() {
+
+        // initialise the socket
+        try {
+            socket = new Socket(address, PORT);
+        } catch (UnknownHostException e) {
+            System.err.println("Unknown host");
+            viewModel.connectionFailed();
+            return;
+        } catch (IOException e) {
+            System.err.println("Couldn't get IO for connection");
+            viewModel.connectionFailed();
+            return;
+        }
+
+        System.out.println("still running");
+
         try {
             socket.setSoTimeout(TIMEOUT / 2);
         } catch (SocketException e) {
@@ -84,13 +117,31 @@ public class ClientThread extends Thread {
                 } catch (InterruptedIOException e) {
                     lines = "";
                 }
-                if (lines == null || !connected) {
+                if (lines == null || disconnected) {
                     handleDisconnect(out, in);
                     break;
                 }
 
+                // send any messages from the message queue
+                int queueSize = messageQueue.size();
+                for (int i = 0; i < queueSize; i++) {
+                    Object o = messageQueue.poll();
+                    String xml = protocolMapper.serialize(o);
+                    if (o instanceof Message m) {
+                        if (m.isConnect())
+                            sendConnect(out, in, xml);
+                        if (m.isTurn())
+                            sendTurn(out, in, xml);
+                    }
+                    else if (o instanceof Response r) {
+                        responseLog.put(r.getResponseTo(), xml);
+                        out.println(xml.split("\n").length + "m");
+                        out.println(xml);
+                    }
+                }
+
                 if (lines.isEmpty()) {
-                    handleKeepAlive(out, in);
+                    if (connected) handleKeepAlive(out, in);
                     continue;
                 }
 
@@ -142,30 +193,17 @@ public class ClientThread extends Thread {
                 }
 
                 // just ignore unexpected responses, wouldn't know what to do with them anyway
-
-
-                // send any messages from the message queue
-                int queueSize = messageQueue.size();
-                for (int i = 0; i < queueSize; i++) {
-                    Object o = messageQueue.poll();
-                    String xml = protocolMapper.serialize(o);
-                    if (o instanceof Message m) {
-                        if (m.isConnect())
-                            sendConnect(out, in, xml);
-                        if (m.isTurn())
-                            sendTurn(out, in, xml);
-                    }
-                    else if (o instanceof Response r) {
-                        responseLog.put(r.getResponseTo(), xml);
-                        out.println(xml.split("\n").length + "m");
-                        out.println(xml);
-                    }
-                }
             }
 
         } catch (IOException e) {
             System.err.println("Exception listening for connection");
             System.err.println(e.getMessage());
+        }
+
+        try {
+            socket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -177,7 +215,8 @@ public class ClientThread extends Thread {
         r.setAcknowledge(new Acknowledge());
         messageQueue.add(r);
 
-        // todo: view model startGame()
+        Start start = m.getStart();
+        viewModel.startGame(start.getColour(), start.getOpponentName());
     }
 
     private void handleTurn(PrintWriter out, BufferedReader in, Message m) {
@@ -234,6 +273,7 @@ public class ClientThread extends Thread {
 
 
     private void sendConnect(PrintWriter out, BufferedReader in, String xml) throws IOException {
+        System.out.println("test");
         // sends a connect message, then waits for an approval
         out.println(xml.split("\n").length + "m");
         out.println(xml);
@@ -288,6 +328,8 @@ public class ClientThread extends Thread {
                 break;
             }
         }
+
+        viewModel.setConnected(connected);
     }
 
     private void sendTurn(PrintWriter out, BufferedReader in, String xml) throws IOException {
@@ -361,7 +403,7 @@ public class ClientThread extends Thread {
             out.println(xml);
         }
         if (retries >= MAX_RETRIES) {
-            connected = false;
+            disconnected = true;
         }
     }
 
@@ -371,8 +413,6 @@ public class ClientThread extends Thread {
         // but still need to check for disconnects
 
         if (System.currentTimeMillis() >= lastActivity + KA_TIMEOUT) {
-            System.out.println((System.currentTimeMillis() - lastActivity) + " " + this.getName());
-
             // send keep-alive
             KeepAlive ka = new KeepAlive("m");
             String xml = protocolMapper.serialize(ka);

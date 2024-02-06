@@ -328,6 +328,8 @@ public class Game {
         validMoves = new MoveTree();
         highlightedMoves = new ArrayList<>();
 
+        if (currentPlayer != Player.Client) return;
+
         // add child for each usable domino
         for (Domino d : clientHand.getDominoes()) {
             if (d.isAvailable()) {
