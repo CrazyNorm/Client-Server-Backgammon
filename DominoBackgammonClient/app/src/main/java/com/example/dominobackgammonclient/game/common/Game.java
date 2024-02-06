@@ -126,8 +126,27 @@ public class Game {
         updateHighlightedMoves();
     }
 
-    public void endTurn() {
-        // send chosen domino & move stack to socket
+    public boolean isUndoable() {
+        // only allows pressing undo if there is something to undo
+        return !turnStack.isEmpty();
+    }
+
+    public boolean isTurnValid() {
+        // only allows submitting turn if a domino is selected, and there are no moves left
+        if (currentPlayer != Player.Client) return false;
+        if (selectedDomino == null) return false;
+        return highlightedMoves.isEmpty();
+    }
+
+    public List<int[]> getMoves() {
+        return turnStack;
+    }
+
+    public List<Domino> getSelectedDominoes() {
+        List<Domino> dominoes = new ArrayList<>();
+        if (selectedDomino != null) dominoes.add(selectedDomino);
+        if (selectedDouble != null) dominoes.add(selectedDouble);
+        return dominoes;
     }
 
     public void nextTurn() {

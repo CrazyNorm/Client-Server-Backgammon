@@ -18,7 +18,9 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 fun ControlButtons(
     onUndo: () -> Unit,
     onSubmit: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enableUndo: Boolean = true,
+    enableSubmit: Boolean = true
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -26,6 +28,7 @@ fun ControlButtons(
     ) {
         Button(
             onClick = onUndo,
+            enabled = enableUndo,
             colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             modifier = Modifier
                 .weight(0.5f)
@@ -35,6 +38,7 @@ fun ControlButtons(
 
         Button(
             onClick = onSubmit,
+            enabled = enableSubmit,
             colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             modifier = Modifier.weight(0.5f)
         ) {

@@ -96,6 +96,8 @@ fun BGScreen(
             ControlButtons(
                 onUndo = { bgViewModel.undoMove() },
                 onSubmit = { },
+                enableUndo = gameState.isUndoable,
+                enableSubmit = gameState.isTurnValid,
                 modifier = Modifier.weight(.1f)
             )
         }
