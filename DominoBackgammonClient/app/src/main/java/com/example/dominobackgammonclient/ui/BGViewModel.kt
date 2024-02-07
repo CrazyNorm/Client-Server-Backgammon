@@ -2,10 +2,9 @@ package com.example.dominobackgammonclient.ui
 
 import androidx.lifecycle.ViewModel
 import com.example.dominobackgammonclient.client.ClientThread
-import com.example.dominobackgammonclient.client.pojo.Connect
-import com.example.dominobackgammonclient.client.pojo.Message
-import com.example.dominobackgammonclient.client.pojo.PlayerPojo
+import com.example.dominobackgammonclient.client.pojo.*
 import com.example.dominobackgammonclient.game.common.Game
+import com.example.dominobackgammonclient.game.common.Player
 import com.example.dominobackgammonclient.ui.common.BGColour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,15 +13,18 @@ import kotlinx.coroutines.flow.update
 
 class BGViewModel : ViewModel() {
 
-    private val _gameState = MutableStateFlow(Game(BGColour.WHITE)) // temporarily initialised to white
+    private val address = "192.168.1.78"
+
+    private lateinit var _gameState: MutableStateFlow<Game>
     val gameState: StateFlow<Game> = _gameState.asStateFlow()
 
     // initialise client thread
-    private var _client: ClientThread = ClientThread("", this)
+    private lateinit var _client: ClientThread
 
     private val _uiState = MutableStateFlow(UIState())
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
+    // client side UI changes during turn
     fun selectDomino(side1: Int, side2: Int) {
         val tempGame = Game(_gameState.value)
         tempGame.selectDomino(side1, side2)
@@ -42,12 +44,12 @@ class BGViewModel : ViewModel() {
     }
 
 
-
+    // connecting to server
     fun sendConnect() {
         _uiState.update { currentState ->
             currentState.copy(connecting = true)
         }
-        _client = ClientThread("192.168.1.78", this)
+        _client = ClientThread(address, this)
         _client.start()
         val m = Message()
         m.connect = Connect("test", "any")
@@ -70,7 +72,9 @@ class BGViewModel : ViewModel() {
     }
 
 
+    // starting game
     fun startGame(clientColour: PlayerPojo, opponentName: String) {
+        println("opponent: $opponentName")
         if (clientColour == PlayerPojo.White) _gameState.update { Game(BGColour.WHITE) }
         else if (clientColour == PlayerPojo.Black) _gameState.update { Game(BGColour.BLACK) }
 
@@ -78,31 +82,50 @@ class BGViewModel : ViewModel() {
             currentState.copy(started = true)
         }
 
+        _client.updateGame(_gameState.value)
         _gameState.value.generateValidMoves()
     }
 
 
+    // sending / receiving turns
+    fun sendTurn() {
+        _uiState.update { currentState ->
+            currentState.copy(waiting = true)
+        }
+
+        // get colour
+        val colour = if (_gameState.value.getColour(Player.Client) == BGColour.WHITE) PlayerPojo.White
+        else PlayerPojo.Black
+        val turn = TurnPojo(colour)
+
+        // add moves
+        val moves = _gameState.value.moves
+        for (move in moves) turn.addMove(MovePojo(move[0], move[1]))
+
+        // add dominoes
+        val dominoes = _gameState.value.selectedDominoes
+        for (dom in dominoes)
+            turn.addDomino(DominoPojo(
+                dom.side1,
+                dom.side2,
+                dom.isAvailable
+            ))
+
+        // send message
+        val m = Message()
+        m.turn = turn
+        _client.queueMessage(m)
+    }
+
+    fun turnDenied() {
+        // todo: display failure message
+        _uiState.update { currentState ->
+            currentState.copy(waiting = false)
+        }
+    }
+
+
     init {
-
-        // for test demonstration purposes: remove!
-//        _gameState.value.useDomino(6, 4, Player.Client)
-//        _gameState.value.getHand(Player.Client).nextDouble.unblock()
-//
-//        _gameState.value.board.hitPiece(6, Player.Client)
-
-//        _gameState.value.board.movePiece(8, 4, Player.Client);
-//        _gameState.value.board.movePiece(8, 4, Player.Client);
-//        _gameState.value.board.movePiece(8, 4, Player.Client);
-//
-//        _gameState.value.board.movePiece(13, 5, Player.Client);
-//        _gameState.value.board.movePiece(13, 5, Player.Client);
-//        _gameState.value.board.movePiece(13, 5, Player.Client);
-//        _gameState.value.board.movePiece(13, 5, Player.Client);
-//        _gameState.value.board.movePiece(13, 5, Player.Client);
-//
-//        _gameState.value.board.movePiece(24, 3, Player.Client);
-//        _gameState.value.board.movePiece(24, 3, Player.Client);
-
         _gameState.value.generateValidMoves()
     }
 }

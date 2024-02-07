@@ -79,6 +79,11 @@ public class ClientThread extends Thread {
     }
 
 
+    public void updateGame(Game game) {
+        this.game = game;
+    }
+
+
     @Override
     public void run() {
 
@@ -95,8 +100,6 @@ public class ClientThread extends Thread {
             return;
         }
 
-        System.out.println("still running");
-
         try {
             socket.setSoTimeout(TIMEOUT / 2);
         } catch (SocketException e) {
@@ -112,16 +115,6 @@ public class ClientThread extends Thread {
 
             String lines;
             while(true) {
-                try {
-                    lines = in.readLine();
-                } catch (InterruptedIOException e) {
-                    lines = "";
-                }
-                if (lines == null || disconnected) {
-                    handleDisconnect(out, in);
-                    break;
-                }
-
                 // send any messages from the message queue
                 int queueSize = messageQueue.size();
                 for (int i = 0; i < queueSize; i++) {
@@ -138,6 +131,17 @@ public class ClientThread extends Thread {
                         out.println(xml.split("\n").length + "m");
                         out.println(xml);
                     }
+                }
+
+
+                try {
+                    lines = in.readLine();
+                } catch (InterruptedIOException e) {
+                    lines = "";
+                }
+                if (lines == null || disconnected) {
+                    handleDisconnect(out, in);
+                    break;
                 }
 
                 if (lines.isEmpty()) {
@@ -224,6 +228,7 @@ public class ClientThread extends Thread {
         // hash expects another response, but client can just ignore this
 
         // todo: view model applyTurn()
+        System.out.println(protocolMapper.serialize(m));
 
         Response r = new Response(m.getIdempotencyKey());
         r.setHash(new Hash(game.checksum()));
@@ -250,8 +255,8 @@ public class ClientThread extends Thread {
         messageQueue.add(r);
 
         NextTurn next = m.getNextTurn();
-        if (next.isWin() || next.isDisconnect()) {
-            handleGameOver(out, in); // todo: handle game over
+        if (next.isWin()) {
+            handleGameOver(out, in, m); // todo: handle game over
             return;
         }
 //        if (next.isSwap())
@@ -259,8 +264,9 @@ public class ClientThread extends Thread {
         // todo: view model nextTurn()
     }
 
-    private void handleGameOver(PrintWriter out, BufferedReader in) {
-
+    private void handleGameOver(PrintWriter out, BufferedReader in, Message m) {
+        if (m.getNextTurn().isDisconnect())
+            System.out.println("opponent disconnected");
     }
 
     private void handleDisconnect(PrintWriter out, BufferedReader in) {
@@ -273,7 +279,6 @@ public class ClientThread extends Thread {
 
 
     private void sendConnect(PrintWriter out, BufferedReader in, String xml) throws IOException {
-        System.out.println("test");
         // sends a connect message, then waits for an approval
         out.println(xml.split("\n").length + "m");
         out.println(xml);
@@ -384,8 +389,8 @@ public class ClientThread extends Thread {
             if (type.equals("r")) {
                 Response r = protocolMapper.deserializeResponse(doc.toString());
 
-//                if (!r.isApprove())
-                    // todo: view model turnDenied()
+                if (!r.isApprove())
+                    viewModel.turnDenied();
                 break;
             }
         }
