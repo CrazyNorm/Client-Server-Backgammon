@@ -28,90 +28,93 @@ fun BGScreen(
     val gameState by bgViewModel.gameState.collectAsState()
     val uiState by bgViewModel.uiState.collectAsState()
 
-    Box {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .background(DarkGreen)
-                .padding(vertical = 10.dp)
-        ) {
 
-            DominoList(
-                colour = gameState.getColour(Player.Opponent),
-                hand = gameState.getHand(Player.Opponent),
-                onClick = { _, _ -> /* Do nothing for opponent hand */ },
-                modifier = Modifier.weight(.15f)
-            )
+    // overlays
+    if (!uiState.connected)
+        ConnectOverlay(
+            onClick = { bgViewModel.sendConnect() },
+            connectionFailed = uiState.connectionFailed,
+            disableButton = uiState.connecting
+        )
 
-            PlayerStats(
-                colour = gameState.getColour(Player.Opponent),
-                pipCount = gameState.board.getPipCount(Player.Opponent),
-                offCount = gameState.board.getOffCount(Player.Opponent),
+    else if (!uiState.started)
+        WaitingOverlay()
+
+
+    // main screen
+    else
+        Box {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
-                    .weight(0.05f)
-                    .padding(horizontal = 8.dp)
-            )
+                    .background(DarkGreen)
+                    .padding(vertical = 10.dp)
+            ) {
 
-            //        if (gameState.isPieceSelected)
-            //            Board(
-            //                board = gameState.board,
-            //                client = gameState.getColour(Player.Client),
-            //                opponent = gameState.getColour(Player.Opponent),
-            //                highlightedPieces = gameState.highlightedMoves,
-            //                onClickPoint = { p -> bgViewModel.selectPiece(p) },
-            //                modifier = Modifier
-            //                    .background(Color(0xFF673AB7))
-            //                    .weight(.5f)
-            //            )
-            //        else
-            Board(
-                board = gameState.board,
-                client = gameState.getColour(Player.Client),
-                opponent = gameState.getColour(Player.Opponent),
-                highlightedPoints = gameState.highlightedMoves,
-                onClickPoint = { p -> bgViewModel.selectPiece(p) },
-                modifier = Modifier
-                    .background(DarkRed)
-                    .weight(.5f)
-            )
+                DominoList(
+                    colour = gameState.getColour(Player.Opponent),
+                    hand = gameState.getHand(Player.Opponent),
+                    onClick = { _, _ -> /* Do nothing for opponent hand */ },
+                    modifier = Modifier.weight(.15f)
+                )
 
-            PlayerStats(
-                colour = gameState.getColour(Player.Client),
-                pipCount = gameState.board.getPipCount(Player.Client),
-                offCount = gameState.board.getOffCount(Player.Client),
-                offHighlight = gameState.highlightedMoves.contains(0),
-                onClickOff = { bgViewModel.selectPiece(0) },
-                modifier = Modifier
-                    .weight(0.05f)
-                    .padding(horizontal = 8.dp)
-            )
+                PlayerStats(
+                    colour = gameState.getColour(Player.Opponent),
+                    pipCount = gameState.board.getPipCount(Player.Opponent),
+                    offCount = gameState.board.getOffCount(Player.Opponent),
+                    modifier = Modifier
+                        .weight(0.05f)
+                        .padding(horizontal = 8.dp)
+                )
 
-            DominoList(
-                colour = gameState.getColour(Player.Client),
-                hand = gameState.getHand(Player.Client),
-                onClick = { s1, s2 -> bgViewModel.selectDomino(s1, s2) },
-                modifier = Modifier.weight(.15f)
-            )
+                //        if (gameState.isPieceSelected)
+                //            Board(
+                //                board = gameState.board,
+                //                client = gameState.getColour(Player.Client),
+                //                opponent = gameState.getColour(Player.Opponent),
+                //                highlightedPieces = gameState.highlightedMoves,
+                //                onClickPoint = { p -> bgViewModel.selectPiece(p) },
+                //                modifier = Modifier
+                //                    .background(Color(0xFF673AB7))
+                //                    .weight(.5f)
+                //            )
+                //        else
+                Board(
+                    board = gameState.board,
+                    client = gameState.getColour(Player.Client),
+                    opponent = gameState.getColour(Player.Opponent),
+                    highlightedPoints = gameState.highlightedMoves,
+                    onClickPoint = { p -> bgViewModel.selectPiece(p) },
+                    modifier = Modifier
+                        .background(DarkRed)
+                        .weight(.5f)
+                )
 
-            ControlButtons(
-                onUndo = { bgViewModel.undoMove() },
-                onSubmit = { bgViewModel.sendTurn() },
-                enableUndo = gameState.isUndoable,
-                enableSubmit = gameState.isTurnValid && !uiState.waiting,
-                modifier = Modifier.weight(.1f)
-            )
-        }
+                PlayerStats(
+                    colour = gameState.getColour(Player.Client),
+                    pipCount = gameState.board.getPipCount(Player.Client),
+                    offCount = gameState.board.getOffCount(Player.Client),
+                    offHighlight = gameState.highlightedMoves.contains(0),
+                    onClickOff = { bgViewModel.selectPiece(0) },
+                    modifier = Modifier
+                        .weight(0.05f)
+                        .padding(horizontal = 8.dp)
+                )
 
+                DominoList(
+                    colour = gameState.getColour(Player.Client),
+                    hand = gameState.getHand(Player.Client),
+                    onClick = { s1, s2 -> bgViewModel.selectDomino(s1, s2) },
+                    modifier = Modifier.weight(.15f)
+                )
 
-        // overlays
-        if (!uiState.connected)
-            ConnectOverlay(
-                onClick = { bgViewModel.sendConnect() },
-                connectionFailed = uiState.connectionFailed,
-                disableButton = uiState.connecting
-            )
-
-        else if (!uiState.started)
-            WaitingOverlay()
+                ControlButtons(
+                    onUndo = { bgViewModel.undoMove() },
+                    onSubmit = { bgViewModel.sendTurn() },
+                    enableUndo = gameState.isUndoable && !uiState.waiting,
+                    enableSubmit = gameState.isTurnValid && !uiState.waiting,
+                    modifier = Modifier.weight(.1f)
+                )
+            }
     }
 }

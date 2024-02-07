@@ -23,8 +23,8 @@ public class Game {
     private final BGColour clientColour;
     private final BGColour opponentColour;
 
-    private final Player currentPlayer;
-    private final int turnCount;
+    private Player currentPlayer;
+    private int turnCount;
     private final Stack<int[]> turnStack;
     private final Stack<Board> boardStack;
 
@@ -151,9 +151,22 @@ public class Game {
 
     public void nextTurn() {
         // change current player
-        // update turn count
-        // deactivate domino selection
+        if (currentPlayer == Player.Client) currentPlayer = Player.Opponent;
+        else {
+            currentPlayer = Player.Client;
+            // update turn count (only when both player's have taken a turn)
+            turnCount++;
+        }
+        // deactivate selection
+        highlightedMoves.clear();
+        selectedPoint = -1;
+        selectedDomino = null;
+        selectedDouble = null;
+        // clear undo stack
+        turnStack.clear();
+        boardStack.clear();
         // reset client board with server board
+        clientBoard = new Board(serverBoard);
     }
 
 
@@ -222,9 +235,15 @@ public class Game {
     public void makeServerMove(int start, int end, Player player) {
         // makes a move according to server instruction
 
+        // flip for opponent moves
+        if (player == Player.Opponent) {
+            if (start < 25) start = 25 - start;
+            if (end > 0) end = 25 - end;
+        }
+
         // select appropriate method for bear off / enter
         if (end == 0) bearOffServer(start, player);
-        else if (selectedPoint == 25) enterServer(end, player);
+        else if (start == 25) enterServer(end, player);
         else moveServer(start, end, player);
     }
 
@@ -261,6 +280,9 @@ public class Game {
 
     public void selectDomino(int side1, int side2) {
         // deselects previous domino & selects new domino
+
+        // only works on correct turn
+        if (currentPlayer != Player.Client) return;
 
         if (side1 == side2) selectDomino(side1);
         else {
@@ -351,6 +373,7 @@ public class Game {
 
         // add child for each usable domino
         for (Domino d : clientHand.getDominoes()) {
+            if (d == null) continue;
             if (d.isAvailable()) {
                 MoveTree domNode = validMoves.addChild(
                         new DominoNode(d.getSide1(), d.getSide2())

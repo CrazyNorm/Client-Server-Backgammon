@@ -2,7 +2,6 @@ package com.example.dominobackgammonclient.client;
 
 import com.example.dominobackgammonclient.client.pojo.*;
 import com.example.dominobackgammonclient.client.xml.ProtocolMapper;
-import com.example.dominobackgammonclient.game.common.Game;
 import com.example.dominobackgammonclient.ui.BGViewModel;
 
 import java.io.*;
@@ -44,7 +43,6 @@ public class ClientThread extends Thread {
     private String opponent;
 
     private PlayerPojo colour;
-    private Game game;
     private boolean connected = false;
     private boolean disconnected = false;
 
@@ -76,11 +74,6 @@ public class ClientThread extends Thread {
     public void queueMessage(Message m) {
         m.setIdempotencyKey(newIdemToken());
         messageQueue.add(m);
-    }
-
-
-    public void updateGame(Game game) {
-        this.game = game;
     }
 
 
@@ -227,11 +220,10 @@ public class ClientThread extends Thread {
         // applies turn, then sends hash response
         // hash expects another response, but client can just ignore this
 
-        // todo: view model applyTurn()
-        System.out.println(protocolMapper.serialize(m));
+        viewModel.applyTurn(m.getTurn());
 
         Response r = new Response(m.getIdempotencyKey());
-        r.setHash(new Hash(game.checksum()));
+        r.setHash(new Hash(viewModel.checksum()));
         messageQueue.add(r);
     }
 
@@ -242,7 +234,7 @@ public class ClientThread extends Thread {
         // todo: view model resetGame()
 
         Response r = new Response(m.getIdempotencyKey());
-        r.setHash(new Hash(game.checksum()));
+        r.setHash(new Hash(viewModel.checksum()));
         messageQueue.add(r);
     }
 
@@ -261,7 +253,7 @@ public class ClientThread extends Thread {
         }
 //        if (next.isSwap())
             // todo: view model swapHands()
-        // todo: view model nextTurn()
+        viewModel.nextTurn();
     }
 
     private void handleGameOver(PrintWriter out, BufferedReader in, Message m) {

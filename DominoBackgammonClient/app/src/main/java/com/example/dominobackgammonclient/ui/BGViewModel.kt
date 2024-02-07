@@ -15,7 +15,7 @@ class BGViewModel : ViewModel() {
 
     private val address = "192.168.1.78"
 
-    private lateinit var _gameState: MutableStateFlow<Game>
+    private val _gameState: MutableStateFlow<Game> = MutableStateFlow(Game(BGColour.WHITE)) // temp init as white
     val gameState: StateFlow<Game> = _gameState.asStateFlow()
 
     // initialise client thread
@@ -82,7 +82,6 @@ class BGViewModel : ViewModel() {
             currentState.copy(started = true)
         }
 
-        _client.updateGame(_gameState.value)
         _gameState.value.generateValidMoves()
     }
 
@@ -122,6 +121,53 @@ class BGViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(waiting = false)
         }
+    }
+
+    fun applyTurn(turn: TurnPojo) {
+        // applies a turn to the server board (updates client board on next turn)
+
+        val tempGame = Game(_gameState.value)
+
+        // get player
+        val colour = if (turn.player == PlayerPojo.White) BGColour.WHITE else BGColour.BLACK
+        val player = if (colour == _gameState.value.getColour(Player.Client)) Player.Client else Player.Opponent
+
+        // use dominoes
+        if (turn.dominoes.size == 1) {
+            val dom = turn.dominoes[0]
+            tempGame.useDomino(dom.side1, dom.side2, player)
+        } else {
+            val dom: DominoPojo; val dbl: DominoPojo
+            if (turn.dominoes[0].side1 == turn.dominoes[0].side2) {
+                dom = turn.dominoes[1]; dbl = turn.dominoes[0]
+            } else {
+                dom = turn.dominoes[0]; dbl = turn.dominoes[1]
+            }
+            tempGame.useDomino(dbl.side1, dom.side1, dom.side2, player)
+        }
+
+        // apply moves to server board
+        for (move in turn.moves)
+            tempGame.makeServerMove(move.start, move.end, player)
+    }
+
+    fun checksum(): String {
+        return _gameState.value.checksum() ?: ""
+    }
+
+
+
+    // changing to next turn
+    fun nextTurn() {
+        val tempGame = Game(_gameState.value)
+        tempGame.nextTurn()
+        _gameState.update { tempGame }
+
+        _uiState.update { currentState ->
+            currentState.copy(waiting = false)
+        }
+
+        _gameState.value.generateValidMoves()
     }
 
 
