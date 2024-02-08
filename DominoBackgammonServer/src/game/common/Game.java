@@ -387,8 +387,10 @@ public class Game {
         for (int i = 1; i < 25; i++) {
             Point p = boardState.getPoint(i);
             if (p.getPlayer() == colour)
-                for (int j = 0; j < p.getCount(); j++)
-                    pieces.add(i);
+                for (int j = 0; j < p.getCount(); j++) {
+                    if (colour == Player.White) pieces.add(i);
+                    else pieces.add(25-i);
+                }
         }
         // count hit pieces
         for (int i = 0; i < boardState.getBarCount(colour); i++)
@@ -402,11 +404,15 @@ public class Game {
     public List<DominoPojo> getDominoes(Player colour) {
         List<DominoPojo> dominoPojos = new ArrayList<>();
         if (colour == Player.White)
-            for (Domino d: whiteDominoes.getDominoes())
+            for (Domino d: whiteDominoes.getDominoes()) {
+                if (d == null) continue;
                 dominoPojos.add(new DominoPojo(d.getSide1(), d.getSide2(), d.isAvailable()));
+            }
         else if (colour == Player.Black)
-            for (Domino d: blackDominoes.getDominoes())
+            for (Domino d: blackDominoes.getDominoes()) {
+                if (d == null) continue;
                 dominoPojos.add(new DominoPojo(d.getSide1(), d.getSide2(), d.isAvailable()));
+            }
 
         return dominoPojos;
     }

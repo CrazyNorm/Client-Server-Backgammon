@@ -659,11 +659,11 @@ public class ServerThread extends Thread {
         Message reset = new Message(newIdemToken());
         reset.setReset(new Reset(
                 Arrays.asList(
-                        new PieceList(Player.White, game.getPieces(Player.White)),
-                        new PieceList(Player.Black, game.getPieces(Player.Black))
+                    new PieceList(Player.White, game.getPieces(Player.White)),
+                    new PieceList(Player.Black, game.getPieces(Player.Black))
                 ), Arrays.asList(
-                new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White)),
-                new HandPojo(Player.White,  game.getSet(Player.White), game.getDominoes(Player.White))
+                    new HandPojo(Player.White, game.getSet(Player.White), game.getDominoes(Player.White)),
+                    new HandPojo(Player.Black, game.getSet(Player.Black), game.getDominoes(Player.Black))
         )));
 
         String xml = protocolMapper.serialize(reset);
@@ -792,7 +792,6 @@ public class ServerThread extends Thread {
             out.println(xml);
         }
         if (retries >= MAX_RETRIES) {
-            System.out.println("disconnect");
             connected = false;
             if (game.getDisconnect() == Player.None)
                 // only inform other players of a disconnect if no other players have disconnected
