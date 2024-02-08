@@ -28,11 +28,11 @@ public class ServerThread extends Thread {
     private final int MAX_RETRIES = 5; // how many times to retry a message before declaring a disconnect
     private int retries;
 
-    private final int TIMEOUT = 500; // how long to wait (ms) before retrying a message if no response received
+    private final int TIMEOUT = 1000; // how long to wait (ms) before retrying a message if no response received
     private long lastMessage;
 
 
-    private final int KA_TIMEOUT = 5000; // how long to wait (ms) before sending a keep-alive
+    private final int KA_TIMEOUT = 7000; // how long to wait (ms) before sending a keep-alive
     private long lastActivity;
 
 
@@ -100,6 +100,7 @@ public class ServerThread extends Thread {
         } catch (IOException e) {
             System.err.println("Exception listening for connection");
             System.err.println(e.getMessage());
+            if (game != null) game.setDisconnect(colour);
         }
         System.out.println(name + " disconnected");
     }
@@ -384,6 +385,29 @@ public class ServerThread extends Thread {
 
         String lines;
         while(true) {
+            // send any messages from the message queue
+            int queueSize = messageQueue.size();
+            boolean gameOver = false;
+            for (int i = 0; i < queueSize; i++) {
+                Object o = messageQueue.poll();
+                String xml = protocolMapper.serialize(o);
+                if (o instanceof Message m) {
+                    if (m.isTurn()) {
+                        sendTurn(out, in, xml);
+                    }
+                    else if (m.isNextTurn()) {
+                        sendNextTurn(out, in, xml);
+                        if (m.getNextTurn().isWin()) gameOver = true;
+                    }
+                }
+                else if (o instanceof Response r) {
+                    responseLog.put(r.getResponseTo(), xml);
+                    out.println(xml.split("\n").length + "m");
+                    out.println(xml);
+                }
+            }
+            if (gameOver) break;
+
             try {
                 lines = in.readLine();
             } catch (InterruptedIOException e) {
@@ -401,7 +425,7 @@ public class ServerThread extends Thread {
             }
 
             if (lines.isEmpty()) {
-                if (game.getCurrentPlayer() == colour) handleKeepAlive(out, in);
+                handleKeepAlive(out, in);
                 continue;
             }
 
@@ -513,29 +537,6 @@ public class ServerThread extends Thread {
                     // therefore next turn is only sent to other players once correct checksum received
                     queue.add(m);
             }
-
-
-            // send any messages from the message queue
-            int queueSize = messageQueue.size();
-            boolean gameOver = false;
-            for (int i = 0; i < queueSize; i++) {
-                Object o = messageQueue.poll();
-                String xml = protocolMapper.serialize(o);
-                if (o instanceof Message m) {
-                    if (m.isTurn())
-                        sendTurn(out, in, xml);
-                    else if (m.isNextTurn()) {
-                        sendNextTurn(out, in, xml);
-                        if (m.getNextTurn().isWin()) gameOver = true;
-                    }
-                }
-                else if (o instanceof Response r) {
-                    responseLog.put(r.getResponseTo(), xml);
-                    out.println(xml.split("\n").length + "m");
-                    out.println(xml);
-                }
-            }
-            if (gameOver) break;
         }
     }
 
@@ -652,6 +653,8 @@ public class ServerThread extends Thread {
     private void sendReset(PrintWriter out, BufferedReader in) {
         // generates and sends a reset message
         // doesn't expect a response, but will keep sending resets until it receives the correct hash for the turn
+
+        System.out.println("reset " + name);
 
         Message reset = new Message(newIdemToken());
         reset.setReset(new Reset(

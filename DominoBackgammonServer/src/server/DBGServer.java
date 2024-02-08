@@ -4,6 +4,9 @@ import game.common.Game;
 import game.common.Player;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.util.*;
 
@@ -20,6 +23,15 @@ public class DBGServer {
 
     public static void main(String[] args) {
         try(ServerSocket serverSocket = new ServerSocket(PORT)) {
+            // output network interface info
+            for (NetworkInterface netint: NetworkInterface.networkInterfaces().toList()) {
+                System.out.println(netint.getDisplayName() + " (" + netint.getName() + ")");
+                for (InetAddress address: Collections.list(netint.getInetAddresses()))
+                    System.out.println(address);
+                System.out.println();
+            }
+            System.out.println();
+
             while (listening) {
                 ServerThread tempThread = new ServerThread(serverSocket.accept());
                 System.out.println("new client");
@@ -33,6 +45,7 @@ public class DBGServer {
     }
 
     public static void joinQueue(ServerThread thread) {
+        // todo: check periodically
         // join queue for game matching
         // setup ai games
 
