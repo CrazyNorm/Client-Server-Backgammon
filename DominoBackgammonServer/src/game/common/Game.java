@@ -345,7 +345,6 @@ public class Game {
             if (dom == null) continue;
             checksum += dom.getSide1() + "" + dom.getSide2();
             if (dom.isUsed()) checksum += "u";
-            else if (dom.isDouble() && (!swapped || !whiteDominoes.isNextDouble(dom.getSide1()))) checksum += "b";
             else checksum += "a";
         }
         if (boardState.getOffCount(Player.White) > 0)
@@ -366,7 +365,6 @@ public class Game {
             if (dom == null) continue;
             checksum += dom.getSide1() + "" + dom.getSide2();
             if (dom.isUsed()) checksum += "u";
-            else if (dom.isDouble() && (!swapped || !blackDominoes.isNextDouble(dom.getSide1()))) checksum += "b";
             else checksum += "a";
         }
         if (boardState.getOffCount(Player.Black) > 0)
