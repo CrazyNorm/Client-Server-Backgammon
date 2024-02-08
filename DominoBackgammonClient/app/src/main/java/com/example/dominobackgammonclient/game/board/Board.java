@@ -2,6 +2,8 @@ package com.example.dominobackgammonclient.game.board;
 
 import com.example.dominobackgammonclient.game.common.Player;
 
+import java.util.List;
+
 public class Board {
 
     private final int POINT_COUNT = 24;
@@ -37,7 +39,7 @@ public class Board {
         updatePipCount();
     }
 
-    public Board(int[] cIndex, int[] oIndex) {
+    public Board(List<Integer> cIndex, List<Integer> oIndex) {
         // constructs board from a list of piece position indices for each player
         // assumes index lists describe a valid board layout (e.g. only 1 player per point)
         // indices are relative to player (i.e. home board is always 1-6)
@@ -55,21 +57,21 @@ public class Board {
         this.pipCounts = new int[PLAYER_COUNT];
 
         // add pieces at each position
-        for (int i = 0; i < cIndex.length; i++) {
+        for (int i = 0; i < cIndex.size(); i++) {
             // list 1: client pieces
-            if (cIndex[i] == 0) this.offBoard[0]++;
-            else if (cIndex[i] == 25) this.bar[0]++;
+            if (cIndex.get(i) == 0) this.offBoard[0]++;
+            else if (cIndex.get(i) == 25) this.bar[0]++;
             else {
-                Point p = this.points[cIndex[i] - 1];
+                Point p = this.points[cIndex.get(i) - 1];
                 p.setPlayer(Player.Client);
                 p.addPiece();
             }
 
             // list 2: opponent pieces
-            if (oIndex[i] == 0) this.offBoard[1]++;
-            else if (oIndex[i] == 25) this.bar[1]++;
+            if (oIndex.get(i) == 0) this.offBoard[1]++;
+            else if (oIndex.get(i) == 25) this.bar[1]++;
             else {
-                Point p = this.points[24 - oIndex[i]];
+                Point p = this.points[24 - oIndex.get(i)];
                 p.setPlayer(Player.Opponent);
                 p.addPiece();
             }

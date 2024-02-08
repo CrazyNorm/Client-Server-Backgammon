@@ -121,7 +121,7 @@ public class ClientThread extends Thread {
                     }
                     else if (o instanceof Response r) {
                         responseLog.put(r.getResponseTo(), xml);
-                        out.println(xml.split("\n").length + "m");
+                        out.println(xml.split("\n").length + "r");
                         out.println(xml);
                     }
                 }
@@ -231,7 +231,7 @@ public class ClientThread extends Thread {
         // resets game state, then sends another hash response
         // hash expects another response, but client can just ignore this
 
-        // todo: view model resetGame()
+        viewModel.resetGame(m.getReset());
 
         Response r = new Response(m.getIdempotencyKey());
         r.setHash(new Hash(viewModel.checksum()));

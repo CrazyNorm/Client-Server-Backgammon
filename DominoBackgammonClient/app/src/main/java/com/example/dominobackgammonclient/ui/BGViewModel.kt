@@ -6,6 +6,7 @@ import com.example.dominobackgammonclient.client.ClientThread
 import com.example.dominobackgammonclient.client.pojo.*
 import com.example.dominobackgammonclient.game.common.Game
 import com.example.dominobackgammonclient.game.common.Player
+import com.example.dominobackgammonclient.game.dominoes.Hand
 import com.example.dominobackgammonclient.ui.common.BGColour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -127,8 +128,6 @@ class BGViewModel : ViewModel() {
     fun applyTurn(turn: TurnPojo) {
         // applies a turn to the server board (updates client board on next turn)
 
-        val tempGame = Game(_gameState.value)
-
         // get player
         val colour = if (turn.player == PlayerPojo.White) BGColour.WHITE else BGColour.BLACK
         val player = if (colour == _gameState.value.getColour(Player.Client)) Player.Client else Player.Opponent
@@ -136,7 +135,7 @@ class BGViewModel : ViewModel() {
         // use dominoes
         if (turn.dominoes.size == 1) {
             val dom = turn.dominoes[0]
-            tempGame.useDomino(dom.side1, dom.side2, player)
+            _gameState.value.useDomino(dom.side1, dom.side2, player)
         } else {
             val dom: DominoPojo; val dbl: DominoPojo
             if (turn.dominoes[0].side1 == turn.dominoes[0].side2) {
@@ -144,18 +143,53 @@ class BGViewModel : ViewModel() {
             } else {
                 dom = turn.dominoes[0]; dbl = turn.dominoes[1]
             }
-            tempGame.useDomino(dbl.side1, dom.side1, dom.side2, player)
+            _gameState.value.useDomino(dbl.side1, dom.side1, dom.side2, player)
         }
 
         // apply moves to server board
         for (move in turn.moves)
-            tempGame.makeServerMove(move.start, move.end, player)
+            _gameState.value.makeServerMove(move.start, move.end, player)
     }
 
+
+    // resetting if game is inconsistent
     fun checksum(): String {
         return _gameState.value.checksum() ?: ""
     }
 
+    fun resetGame(reset: Reset) {
+        // reset pieces
+        val whitePieces = if (reset.pieces[0].colour == PlayerPojo.White) reset.pieces[0]
+        else reset.pieces[1]
+        val blackPieces = if (reset.pieces[0].colour == PlayerPojo.Black) reset.pieces[0]
+        else reset.pieces[1]
+        _gameState.value.setServerBoard(whitePieces.indices, blackPieces.indices)
+
+        // reset dominoes
+        val whiteHandPojo = if (reset.hands[0].colour == PlayerPojo.White) reset.hands[0]
+        else reset.hands[1]
+        val whiteHand = Hand(whiteHandPojo.set)
+        for (dom in whiteHandPojo.dominoes) {
+            if (!dom.isAvailable) {
+                if (dom.side1 != dom.side2)
+                    whiteHand.useDomino(dom.side1,dom.side2)
+                else whiteHand.useDouble(dom.side1)
+            }
+        }
+        _gameState.value.setHand(whiteHand, BGColour.WHITE)
+
+        val blackHandPojo = if (reset.hands[0].colour == PlayerPojo.Black) reset.hands[0]
+        else reset.hands[1]
+        val blackHand = Hand(blackHandPojo.set)
+        for (dom in blackHandPojo.dominoes) {
+            if (!dom.isAvailable) {
+                if (dom.side1 != dom.side2)
+                    blackHand.useDomino(dom.side1,dom.side2)
+                else blackHand.useDouble(dom.side1)
+            }
+        }
+        _gameState.value.setHand(blackHand, BGColour.BLACK)
+    }
 
 
     // changing to next turn

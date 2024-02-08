@@ -15,11 +15,11 @@ public class Game {
     // start point = 25 means enter from bar
     // (doesn't change for each player)
 
-    private final Board serverBoard;
+    private Board serverBoard;
     private Board clientBoard;
 
-    private final Hand clientHand;
-    private final Hand opponentHand;
+    private Hand clientHand;
+    private Hand opponentHand;
     private final BGColour clientColour;
     private final BGColour opponentColour;
 
@@ -87,10 +87,21 @@ public class Game {
         return clientBoard;
     }
 
+    public void setServerBoard(List<Integer> whiteIndex, List<Integer> blackIndex) {
+        if (clientColour == BGColour.WHITE)
+            serverBoard = new Board(whiteIndex, blackIndex);
+        else serverBoard = new Board(blackIndex, whiteIndex);
+    }
+
     public Hand getHand(Player player) {
         // returns the given player's entire hand: needed for UI
         if (player == Player.Client) return clientHand;
         else return opponentHand;
+    }
+
+    public void setHand(Hand hand, BGColour colour) {
+        if (colour == clientColour) clientHand = hand;
+        else opponentHand = hand;
     }
 
     public BGColour getColour(Player player) {
@@ -386,16 +397,14 @@ public class Game {
         for (Domino dom: whiteHand.getDominoes()) {
             if (dom == null) continue;
             checksum += dom.getSide1() + "" + dom.getSide2();
-            if(dom.isAvailable()) checksum += "a";
-            else if (dom.isBlocked()) checksum += "b";
-            else checksum += "u";
+            if(dom.isUsed()) checksum += "u";
+            else checksum += "a";
         }
         for (Domino dbl: whiteHand.getDoubles()) {
             if (dbl == null) continue;
             checksum += dbl.getSide1() + "" + dbl.getSide2();
-            if(dbl.isAvailable()) checksum += "a";
-            else if (dbl.isBlocked()) checksum += "b";
-            else checksum += "u";
+            if(dbl.isUsed()) checksum += "u";
+            else checksum += "a";
         }
         if (serverBoard.getOffCount(white) > 0)
             checksum += ";0x" + serverBoard.getOffCount(white);
@@ -426,16 +435,14 @@ public class Game {
         for (Domino dom: blackHand.getDominoes()) {
             if (dom == null) continue;
             checksum += dom.getSide1() + "" + dom.getSide2();
-            if(dom.isAvailable()) checksum += "a";
-            else if (dom.isBlocked()) checksum += "b";
-            else checksum += "u";
+            if(dom.isUsed()) checksum += "u";
+            else checksum += "a";
         }
         for (Domino dbl: blackHand.getDoubles()) {
             if (dbl == null) continue;
             checksum += dbl.getSide1() + "" + dbl.getSide2();
-            if(dbl.isAvailable()) checksum += "a";
-            else if (dbl.isBlocked()) checksum += "b";
-            else checksum += "u";
+            if(dbl.isUsed()) checksum += "u";
+            else checksum += "a";
         }
         if (serverBoard.getOffCount(black) > 0)
             checksum += ";0x" + serverBoard.getOffCount(black);
