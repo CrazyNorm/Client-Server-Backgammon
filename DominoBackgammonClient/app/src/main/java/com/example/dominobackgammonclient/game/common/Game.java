@@ -361,7 +361,102 @@ public class Game {
 
     public String checksum() {
         // generates a checksum hash for the game state
-        return "";
+
+        String checksum = "";
+        Player white, black;
+        // current player (needs to convert from client/opponent to white/black)
+        if (getColour(currentPlayer) == BGColour.WHITE) {
+            checksum += "w;;";
+            white = currentPlayer;
+            if (currentPlayer == Player.Client) black = Player.Opponent;
+            else black = Player.Client;
+        }
+        else {
+            checksum += "b;;";
+            black = currentPlayer;
+            if (currentPlayer == Player.Client) white = Player.Opponent;
+            else white = Player.Client;
+        }
+
+        // white
+        checksum += "w" + serverBoard.getPipCount(white) + ";";
+        Hand whiteHand;
+        if (white == Player.Client) whiteHand = clientHand;
+        else whiteHand = opponentHand;
+        for (Domino dom: whiteHand.getDominoes()) {
+            if (dom == null) continue;
+            checksum += dom.getSide1() + "" + dom.getSide2();
+            if(dom.isAvailable()) checksum += "a";
+            else if (dom.isBlocked()) checksum += "b";
+            else checksum += "u";
+        }
+        for (Domino dbl: whiteHand.getDoubles()) {
+            if (dbl == null) continue;
+            checksum += dbl.getSide1() + "" + dbl.getSide2();
+            if(dbl.isAvailable()) checksum += "a";
+            else if (dbl.isBlocked()) checksum += "b";
+            else checksum += "u";
+        }
+        if (serverBoard.getOffCount(white) > 0)
+            checksum += ";0x" + serverBoard.getOffCount(white);
+        if (white == Player.Client)
+            for (int i = 1; i < 25; i++) {
+                Point p = serverBoard.getPoint(i);
+                if (p.getPlayer() == white) {
+                    checksum += ";" + i + "x" + p.getCount();
+                }
+            }
+        else
+            for (int i = 24; i > 0; i--) {
+                Point p = serverBoard.getPoint(i);
+                if (p.getPlayer() == white) {
+                    checksum += ";" + (25-i) + "x" + p.getCount();
+                }
+            }
+        if (serverBoard.getBarCount(white) > 0)
+            checksum += ";25x" + serverBoard.getBarCount(white);
+
+        checksum += ";;";
+
+        // black
+        checksum += "b" + serverBoard.getPipCount(black) + ";";
+        Hand blackHand;
+        if (black == Player.Client) blackHand = clientHand;
+        else blackHand = opponentHand;
+        for (Domino dom: blackHand.getDominoes()) {
+            if (dom == null) continue;
+            checksum += dom.getSide1() + "" + dom.getSide2();
+            if(dom.isAvailable()) checksum += "a";
+            else if (dom.isBlocked()) checksum += "b";
+            else checksum += "u";
+        }
+        for (Domino dbl: blackHand.getDoubles()) {
+            if (dbl == null) continue;
+            checksum += dbl.getSide1() + "" + dbl.getSide2();
+            if(dbl.isAvailable()) checksum += "a";
+            else if (dbl.isBlocked()) checksum += "b";
+            else checksum += "u";
+        }
+        if (serverBoard.getOffCount(black) > 0)
+            checksum += ";0x" + serverBoard.getOffCount(black);
+        if (black == Player.Client)
+            for (int i = 1; i < 25; i++) {
+                Point p = serverBoard.getPoint(i);
+                if (p.getPlayer() == black) {
+                    checksum += ";" + i + "x" + p.getCount();
+                }
+            }
+        else
+            for (int i = 24; i > 0; i--) {
+                Point p = serverBoard.getPoint(i);
+                if (p.getPlayer() == black) {
+                    checksum += ";" + (25-i) + "x" + p.getCount();
+                }
+            }
+        if (serverBoard.getBarCount(black) > 0)
+            checksum += ";25x" + serverBoard.getBarCount(black);
+
+        return checksum;
     }
 
 

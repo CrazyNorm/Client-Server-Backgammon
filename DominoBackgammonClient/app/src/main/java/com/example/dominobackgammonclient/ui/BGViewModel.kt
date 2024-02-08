@@ -1,5 +1,6 @@
 package com.example.dominobackgammonclient.ui
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import com.example.dominobackgammonclient.client.ClientThread
 import com.example.dominobackgammonclient.client.pojo.*
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.update
 
 class BGViewModel : ViewModel() {
 
-    private val address = "192.168.1.78"
+    private val address = "10.204.79.218"
 
     private val _gameState: MutableStateFlow<Game> = MutableStateFlow(Game(BGColour.WHITE)) // temp init as white
     val gameState: StateFlow<Game> = _gameState.asStateFlow()
@@ -52,7 +53,7 @@ class BGViewModel : ViewModel() {
         _client = ClientThread(address, this)
         _client.start()
         val m = Message()
-        m.connect = Connect("test", "any")
+        m.connect = Connect(Build.MODEL, "any")
         _client.queueMessage(m)
     }
 
