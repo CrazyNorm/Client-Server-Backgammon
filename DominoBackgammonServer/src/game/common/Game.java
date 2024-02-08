@@ -305,12 +305,20 @@ public class Game {
         Board restoreBoard = new Board(this.boardState);
         // check moves are valid
         for (MovePojo move: turn.getMoves()) {
-            if (!check(move.getStart(), move.getEnd())) {
+            int start = move.getStart();
+            int end = move.getEnd();
+            // flip moves for black
+            if (currentPlayer == Player.Black) {
+                if (start < 25) start = 25 - start;
+                if (end > 0) end = 25 - end;
+            }
+
+            if (!check(start, end)) {
                 // restore board to before any moves were made
                 this.boardState = restoreBoard;
                 return false;
             }
-            make(move.getStart(), move.getEnd());
+            make(start, end);
         }
 
         // player, dominoes & moves all valid
@@ -324,7 +332,54 @@ public class Game {
 
     public String checksum() {
         // hashes the game state to compare as a checksum
-        return "";
+        // for piece positions, both black and white move from 24 to 1
+
+        String checksum = "";
+        // current player (reversed as server has already progressed to next turn)
+        if (currentPlayer == Player.White) checksum += "b;;";
+        else checksum += "w;;";
+
+        // white
+        checksum += "w" + boardState.getPipCount(Player.White) + ";";
+        for (Domino dom: whiteDominoes.getDominoes()) {
+            if (dom == null) continue;
+            checksum += dom.getSide1() + "" + dom.getSide2();
+            if (dom.isUsed()) checksum += "u";
+            else if (dom.isDouble() && (!swapped || !whiteDominoes.isNextDouble(dom.getSide1()))) checksum += "b";
+            else checksum += "a";
+        }
+        if (boardState.getOffCount(Player.White) > 0)
+            checksum += ";0x" + boardState.getOffCount(Player.White);
+        for (int i = 1; i < 25; i++) {
+            Point p = boardState.getPoint(i);
+            if (p.getPlayer() == Player.White)
+                checksum += ";" + i + "x" + p.getCount();
+        }
+        if (boardState.getBarCount(Player.White) > 0)
+            checksum += ";25x" + boardState.getBarCount(Player.White);
+
+        checksum += ";;";
+
+        // black
+        checksum += "b" + boardState.getPipCount(Player.Black) + ";";
+        for (Domino dom: blackDominoes.getDominoes()) {
+            if (dom == null) continue;
+            checksum += dom.getSide1() + "" + dom.getSide2();
+            if (dom.isUsed()) checksum += "u";
+            else if (dom.isDouble() && (!swapped || !blackDominoes.isNextDouble(dom.getSide1()))) checksum += "b";
+            else checksum += "a";
+        }
+        if (boardState.getOffCount(Player.Black) > 0)
+            checksum += ";0x" + boardState.getOffCount(Player.Black);
+        for (int i = 24; i > 0; i--) {
+            Point p = boardState.getPoint(i);
+            if (p.getPlayer() == Player.Black)
+                checksum += ";" + (25-i) + "x" + p.getCount();
+        }
+        if (boardState.getBarCount(Player.Black) > 0)
+            checksum += ";25x" + boardState.getBarCount(Player.Black);
+
+        return checksum;
     }
 
 
