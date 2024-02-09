@@ -47,7 +47,7 @@ public class Hand {
         // swap between 1 & 2
         this.dominoSet = 3 - this.dominoSet;
         // reinitialize dominoes (not doubles)
-        this.dominoes = DominoSet.getSet(this.dominoSet );
+        this.dominoes = DominoSet.getSet(this.dominoSet);
         // reset remaining (9-1=8 / 1-2=7)
         this.remaining = 9 - this.dominoSet;
     }

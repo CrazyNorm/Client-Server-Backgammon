@@ -392,12 +392,13 @@ public class ServerThread extends Thread {
                 Object o = messageQueue.poll();
                 String xml = protocolMapper.serialize(o);
                 if (o instanceof Message m) {
-                    if (m.isTurn()) {
+                    if (m.isTurn())
                         sendTurn(out, in, xml);
-                    }
                     else if (m.isNextTurn()) {
                         sendNextTurn(out, in, xml);
                         if (m.getNextTurn().isWin()) gameOver = true;
+                        if (m.getNextTurn().isSwap() && colour == game.getCurrentPlayer())
+                            game.swapHands();
                     }
                 }
                 else if (o instanceof Response r) {

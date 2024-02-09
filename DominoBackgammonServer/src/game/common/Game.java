@@ -212,7 +212,7 @@ public class Game {
         // check current player has the double in their hand
         if (!dominoes.hasDouble(val)) return false;
         // check double is available to be used
-        if (dominoes.isDoubleAvailable(val)) return false;
+        if (!dominoes.isDoubleAvailable(val)) return false;
         // check double is the next lowest un-used double
         return dominoes.isNextDouble(val);
     }
