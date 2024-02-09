@@ -212,7 +212,43 @@ class BGViewModel : ViewModel() {
     }
 
 
-    init {
-        _gameState.value.generateValidMoves()
+    // ending a game
+    fun gameOver() {
+        _uiState.update { currentState ->
+            currentState.copy(gameOver = true)
+        }
+    }
+    fun disconnect(colour: BGColour) {
+        if(colour == _gameState.value.getColour(Player.Client))
+            _uiState.update { currentState ->
+                currentState.copy(clientDisconnect = true)
+            }
+        else
+            _uiState.update { currentState ->
+                currentState.copy(opponentDisconnect = true)
+            }
+    }
+
+    fun disconnect() {
+        // default assumes client disconnect
+        _uiState.update { currentState ->
+            currentState.copy(clientDisconnect = true)
+        }
+    }
+
+    fun win(colour: BGColour, type: Int) {
+        if(colour == _gameState.value.getColour(Player.Client))
+            _uiState.update { currentState ->
+                currentState.copy(clientWin = true, winType = type)
+            }
+        else
+            _uiState.update { currentState ->
+                currentState.copy(opponentWin = true, winType = type)
+            }
+    }
+
+    fun startOver() {
+        // completely resets ui state
+        _uiState.update { UIState() }
     }
 }

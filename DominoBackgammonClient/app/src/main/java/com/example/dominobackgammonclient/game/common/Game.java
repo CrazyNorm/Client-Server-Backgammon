@@ -365,11 +365,6 @@ public class Game {
     }
 
 
-    public void win(Player winner, int type) {
-        // change UI to reflect end of game
-    }
-
-
     public String checksum() {
         // generates a checksum hash for the game state
 
@@ -730,7 +725,7 @@ public class Game {
             if (i == 24 && turnCount < 4) continue;
 
             // check bearing off
-            if (i < 6) {
+            if (i < 6 && highestPoint <= 6) {
                 // exact bear off
                 if (i == domino.getSide1())
                     parent.addChild(new MoveNode(

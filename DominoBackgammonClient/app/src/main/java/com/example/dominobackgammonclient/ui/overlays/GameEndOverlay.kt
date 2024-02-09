@@ -13,15 +13,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.example.dominobackgammonclient.ui.theme.DarkRed
 
 @Composable
-fun ConnectOverlay(
+fun GameEndOverlay(
     onClick: () -> Unit,
-    connectionFailed: Boolean,
-    disableButton: Boolean,
+    clientWin: Boolean,
+    clientLoss: Boolean,
+    winType: Int,
+    clientDisconnect: Boolean,
+    opponentDisconnect: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -32,19 +34,29 @@ fun ConnectOverlay(
             .background(Color.Gray)
             .alpha(.75f)
     ) {
-        if (connectionFailed)
+        Text("Game Over!")
+
+        Text(
+            if (clientWin) "You win!"
+            else if (clientLoss) "You lose!"
+            else if (clientDisconnect) "You disconnected :("
+            else if (opponentDisconnect) "Your opponent disconnected :("
+            else ""
+        )
+
+        if (winType != 0)
             Text(
-                text = "Failed to connect",
-                style = TextStyle(Color.Red)
+                if (winType == 2) "Gammon!"
+                else if (winType == 3) "Backgammon!"
+                else ""
             )
 
         Button(
             onClick = onClick,
-            enabled = !disableButton,
             colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             modifier = Modifier.padding(10.dp)
         ) {
-            Text("Connect")
+            Text("Play again")
         }
     }
 }

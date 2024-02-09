@@ -17,6 +17,7 @@ import com.example.dominobackgammonclient.ui.common.ControlButtons
 import com.example.dominobackgammonclient.ui.common.PlayerStats
 import com.example.dominobackgammonclient.ui.dominoes.DominoList
 import com.example.dominobackgammonclient.ui.overlays.ConnectOverlay
+import com.example.dominobackgammonclient.ui.overlays.GameEndOverlay
 import com.example.dominobackgammonclient.ui.overlays.WaitingOverlay
 import com.example.dominobackgammonclient.ui.theme.DarkGreen
 import com.example.dominobackgammonclient.ui.theme.DarkRed
@@ -39,6 +40,16 @@ fun BGScreen(
 
     else if (!uiState.started)
         WaitingOverlay()
+
+    else if (uiState.gameOver)
+        GameEndOverlay(
+            onClick = { bgViewModel.startOver() },
+            clientWin = uiState.clientWin,
+            clientLoss = uiState.opponentWin,
+            winType = uiState.winType,
+            clientDisconnect = uiState.clientDisconnect,
+            opponentDisconnect = uiState.opponentDisconnect
+        )
 
 
     // main screen

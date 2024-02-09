@@ -3,6 +3,7 @@ package com.example.dominobackgammonclient.client;
 import com.example.dominobackgammonclient.client.pojo.*;
 import com.example.dominobackgammonclient.client.xml.ProtocolMapper;
 import com.example.dominobackgammonclient.ui.BGViewModel;
+import com.example.dominobackgammonclient.ui.common.BGColour;
 
 import java.io.*;
 import java.net.Socket;
@@ -45,6 +46,7 @@ public class ClientThread extends Thread {
     private PlayerPojo colour;
     private boolean connected = false;
     private boolean disconnected = false;
+    private boolean gameOver = false;
 
     public ClientThread(String address, BGViewModel viewModel) {
         this.address = address;
@@ -96,7 +98,9 @@ public class ClientThread extends Thread {
         try {
             socket.setSoTimeout(TIMEOUT / 2);
         } catch (SocketException e) {
-            throw new RuntimeException(e);
+            System.err.println("Error setting socket timeout");
+            viewModel.connectionFailed();
+            return;
         }
 
         try (
@@ -126,6 +130,7 @@ public class ClientThread extends Thread {
                     }
                 }
 
+                if (gameOver) break;
 
                 try {
                     lines = in.readLine();
@@ -133,7 +138,7 @@ public class ClientThread extends Thread {
                     lines = "";
                 }
                 if (lines == null || disconnected) {
-                    handleDisconnect(out, in);
+                    handleDisconnect();
                     break;
                 }
 
@@ -182,11 +187,10 @@ public class ClientThread extends Thread {
                     }
 
                     // find appropriate handler
-                    if (m.isMalformed()) handleMalformed(out, in);
-                    else if (m.isStart()) handleStart(out, in, m);
-                    else if (m.isTurn()) handleTurn(out, in, m);
-                    else if (m.isReset()) handleReset(out, in, m);
-                    else if (m.isNextTurn()) handleNextTurn(out, in, m);
+                    if (m.isStart()) handleStart(m);
+                    else if (m.isTurn()) handleTurn(m);
+                    else if (m.isReset()) handleReset(m);
+                    else if (m.isNextTurn()) handleNextTurn(m);
                 }
 
                 // just ignore unexpected responses, wouldn't know what to do with them anyway
@@ -195,6 +199,7 @@ public class ClientThread extends Thread {
         } catch (IOException e) {
             System.err.println("Exception listening for connection");
             System.err.println(e.getMessage());
+            handleDisconnect();
         }
 
         try {
@@ -205,7 +210,7 @@ public class ClientThread extends Thread {
     }
 
 
-    private void handleStart(PrintWriter out, BufferedReader in, Message m) {
+    private void handleStart(Message m) {
         // sends acknowledge response then starts game
 
         Response r = new Response(m.getIdempotencyKey());
@@ -216,7 +221,7 @@ public class ClientThread extends Thread {
         viewModel.startGame(start.getColour(), start.getOpponentName());
     }
 
-    private void handleTurn(PrintWriter out, BufferedReader in, Message m) {
+    private void handleTurn(Message m) {
         // applies turn, then sends hash response
         // hash expects another response, but client can just ignore this
 
@@ -227,7 +232,7 @@ public class ClientThread extends Thread {
         messageQueue.add(r);
     }
 
-    private void handleReset(PrintWriter out, BufferedReader in, Message m) {
+    private void handleReset(Message m) {
         // resets game state, then sends another hash response
         // hash expects another response, but client can just ignore this
 
@@ -238,7 +243,7 @@ public class ClientThread extends Thread {
         messageQueue.add(r);
     }
 
-    private void handleNextTurn(PrintWriter out, BufferedReader in, Message m) {
+    private void handleNextTurn(Message m) {
         // send acknowledge response, then process next turn
         // needs to handle wins, swaps & disconnects
 
@@ -248,7 +253,7 @@ public class ClientThread extends Thread {
 
         NextTurn next = m.getNextTurn();
         if (next.isWin()) {
-            handleGameOver(out, in, m); // todo: handle game over
+            handleGameOver(m);
             return;
         }
         if (next.isSwap())
@@ -256,17 +261,32 @@ public class ClientThread extends Thread {
         viewModel.nextTurn();
     }
 
-    private void handleGameOver(PrintWriter out, BufferedReader in, Message m) {
-        if (m.getNextTurn().isDisconnect())
-            System.out.println("opponent disconnected");
+    private void handleGameOver(Message m) {
+        if (m.getNextTurn().isDisconnect()) {
+            // convert to BGColour (the player that didn't win must have disconnected)
+            BGColour colour;
+            if (m.getNextTurn().getWin().getPlayer() == PlayerPojo.White) colour = BGColour.BLACK;
+            else colour = BGColour.WHITE;
+
+            viewModel.disconnect(colour);
+        }
+        else if (m.getNextTurn().isWin()) {
+            // convert to BGColour
+            BGColour colour;
+            if (m.getNextTurn().getWin().getPlayer() == PlayerPojo.White) colour = BGColour.WHITE;
+            else colour = BGColour.BLACK;
+
+            viewModel.win(colour, m.getNextTurn().getWin().getType());
+        }
+
+        gameOver = true;
+        viewModel.gameOver();
     }
 
-    private void handleDisconnect(PrintWriter out, BufferedReader in) {
-        // todo: view model disconnect()?
-    }
-
-    private void handleMalformed(PrintWriter out, BufferedReader in) {
-
+    private void handleDisconnect() {
+        // self-disconnect due to lack of server response
+        viewModel.disconnect();
+        viewModel.gameOver();
     }
 
 

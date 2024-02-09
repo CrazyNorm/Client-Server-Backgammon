@@ -24,11 +24,13 @@ fun BorneOff(
         modifier = modifier
             .border(3.dp, Color.Gray)
     ) {
-        Box(
-            Modifier
-                .weight(1f - count / 15f)
-                .fillMaxHeight()
-        )
+        if (count < 15)
+            // fills the empty space next to the borne off pieces
+            Box(
+                Modifier
+                    .weight(1f - count / 15f)
+                    .fillMaxHeight()
+            )
         for (i in 1..count) {
             BorneOffPiece(
                 colour,
