@@ -251,8 +251,8 @@ public class ClientThread extends Thread {
             handleGameOver(out, in, m); // todo: handle game over
             return;
         }
-//        if (next.isSwap())
-            // todo: view model swapHands()
+        if (next.isSwap())
+            viewModel.swapHands();
         viewModel.nextTurn();
     }
 

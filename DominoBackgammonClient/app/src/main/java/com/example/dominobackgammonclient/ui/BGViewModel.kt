@@ -205,6 +205,12 @@ class BGViewModel : ViewModel() {
         _gameState.value.generateValidMoves()
     }
 
+    fun swapHands() {
+        val tempGame = Game(_gameState.value)
+        tempGame.swapHands()
+        _gameState.update { tempGame }
+    }
+
 
     init {
         _gameState.value.generateValidMoves()

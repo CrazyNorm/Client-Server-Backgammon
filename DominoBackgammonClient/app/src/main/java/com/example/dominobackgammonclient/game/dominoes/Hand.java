@@ -90,11 +90,12 @@ public class Hand {
         int index = findDouble(val);
         if (index != -1) {
             doubles[index].use();
-            nextDouble++;
 
             // unblock next double
-            if (nextDouble < 3)
+            if (nextDouble < 2) {
+                nextDouble++;
                 getNextDouble().unblock();
+            }
         }
     }
     public Domino selectDouble(int val) {
