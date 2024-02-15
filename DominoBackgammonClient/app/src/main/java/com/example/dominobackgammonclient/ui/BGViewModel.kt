@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 
 class BGViewModel : ViewModel() {
 
-    private val address = "10.204.79.218"
+    private val address = "132.226.211.91"
 
     private val _gameState: MutableStateFlow<Game> = MutableStateFlow(Game(BGColour.WHITE)) // temp init as white
     val gameState: StateFlow<Game> = _gameState.asStateFlow()
