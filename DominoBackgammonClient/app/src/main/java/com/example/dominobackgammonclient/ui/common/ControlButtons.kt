@@ -1,11 +1,12 @@
 package com.example.dominobackgammonclient.ui.common
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,33 @@ fun ControlButtons(
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier,
     enableUndo: Boolean = true,
+    enableSubmit: Boolean = true,
+    rotate: Boolean = false
+) {
+    if (rotate)
+        ControlButtonsColumn(
+            onUndo,
+            onSubmit,
+            modifier,
+            enableUndo,
+            enableSubmit
+        )
+    else
+        ControlButtonsRow(
+            onUndo,
+            onSubmit,
+            modifier,
+            enableUndo,
+            enableSubmit
+        )
+}
+
+@Composable
+fun ControlButtonsRow(
+    onUndo: () -> Unit,
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier,
+    enableUndo: Boolean = true,
     enableSubmit: Boolean = true
 ) {
     Row(
@@ -30,10 +58,9 @@ fun ControlButtons(
             onClick = onUndo,
             enabled = enableUndo,
             colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
-            modifier = Modifier
-                .weight(0.5f)
+            modifier = Modifier.weight(0.5f)
         ) {
-            Text("Undo")
+            Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
         }
 
         Button(
@@ -42,7 +69,41 @@ fun ControlButtons(
             colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             modifier = Modifier.weight(0.5f)
         ) {
-            Text("Submit")
+            Icon(imageVector = Icons.Default.Check, contentDescription = "Submit")
+        }
+    }
+}
+
+@Composable
+fun ControlButtonsColumn(
+    onUndo: () -> Unit,
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier,
+    enableUndo: Boolean = true,
+    enableSubmit: Boolean = true
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier.padding(horizontal = 10.dp)
+    ) {
+        Button(
+            onClick = onSubmit,
+            enabled = enableSubmit,
+            colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
+            contentPadding = PaddingValues(1.dp),
+            modifier = Modifier.weight(0.5f)
+        ) {
+            Icon(imageVector = Icons.Default.Check, contentDescription = "Submit")
+        }
+
+        Button(
+            onClick = onUndo,
+            enabled = enableUndo,
+            colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
+            contentPadding = PaddingValues(1.dp),
+            modifier = Modifier.weight(0.5f)
+        ) {
+            Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
         }
     }
 }

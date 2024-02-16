@@ -2,10 +2,7 @@ package com.example.dominobackgammonclient.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,6 +12,27 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
 fun BorneOff(
+    colour: BGColour,
+    count: Int,
+    modifier: Modifier = Modifier,
+    rotate: Boolean = false
+) {
+    if (rotate)
+        BorneOffColumn(
+            colour,
+            count,
+            modifier
+        )
+    else
+        BorneOffRow(
+            colour,
+            count,
+            modifier
+        )
+}
+
+@Composable
+fun BorneOffRow(
     colour: BGColour,
     count: Int,
     modifier: Modifier = Modifier
@@ -37,6 +55,36 @@ fun BorneOff(
                 Modifier
                     .weight(1f / 15f)
                     .fillMaxHeight()
+                    .border(1.dp, Color.Gray)
+            )
+        }
+    }
+}
+
+@Composable
+fun BorneOffColumn(
+    colour: BGColour,
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.Top,
+        modifier = modifier
+            .border(3.dp, Color.Gray)
+    ) {
+        if (count < 15)
+        // fills the empty space next to the borne off pieces
+            Box(
+                Modifier
+                    .weight(1f - count / 15f)
+                    .fillMaxWidth()
+            )
+        for (i in 1..count) {
+            BorneOffPiece(
+                colour,
+                Modifier
+                    .weight(1f / 15f)
+                    .fillMaxWidth()
                     .border(1.dp, Color.Gray)
             )
         }

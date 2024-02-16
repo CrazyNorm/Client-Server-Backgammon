@@ -1,15 +1,13 @@
 package com.example.dominobackgammonclient.ui.dominoes
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,23 +17,24 @@ import com.example.dominobackgammonclient.ui.common.BGColour
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
-fun DominoList(
+fun DominoListHorizontal(
     colour: BGColour,
     hand: Hand,
     onClick: (Int, Int) -> Unit,
+    enable: Boolean,
     modifier: Modifier = Modifier
 ) {
-    DominoList(
+    DominoListHorizontal(
         colour = colour,
         doubles = hand.doubles.asList().asReversed(),
         hand = hand.dominoes.asList().asReversed(),
-        onClick = onClick,
+        onClick = if (enable) onClick else { _, _ -> /* do nothing */},
         modifier = modifier
     )
 }
 
 @Composable
-fun DominoList(
+fun DominoListHorizontal(
     colour: BGColour,
     doubles: List<Domino>,
     hand: List<Domino?>,
@@ -100,7 +99,7 @@ fun PreviewWhiteHand() {
     )
 
     DominoBackgammonClientTheme {
-        DominoList(
+        DominoListHorizontal(
             BGColour.WHITE,
             doubles,
             hand,
@@ -133,7 +132,7 @@ fun PreviewBlackHand() {
     )
 
     DominoBackgammonClientTheme {
-        DominoList(
+        DominoListHorizontal(
             BGColour.BLACK,
             doubles,
             hand,

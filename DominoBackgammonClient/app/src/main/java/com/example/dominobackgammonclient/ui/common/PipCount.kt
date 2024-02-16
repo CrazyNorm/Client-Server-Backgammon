@@ -17,7 +17,8 @@ import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 fun PipCount(
     colour: BGColour,
     count: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    simple: Boolean = false
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -25,7 +26,8 @@ fun PipCount(
         modifier = modifier
     ) {
         Piece(colour)
-        Text("Moves left:")
+        if (simple) Text("  ")
+        else Text("Moves left:")
         Text(
             count.toString(),
             fontWeight = FontWeight.Bold
