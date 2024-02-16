@@ -32,11 +32,11 @@ public class ClientThread extends Thread {
     private final int MAX_RETRIES = 5; // how many times to retry a message before declaring a disconnect
     private int retries;
 
-    private final int TIMEOUT = 1000; // how long to wait (ms) before retrying a message if no response received
+    private final int TIMEOUT = 2000; // how long to wait (ms) before retrying a message if no response received
     private long lastMessage;
 
 
-    private final int KA_TIMEOUT = 7000; // how long to wait (ms) before sending a keep-alive
+    private final int KA_TIMEOUT = 10000; // how long to wait (ms) before sending a keep-alive
     private long lastActivity;
 
 
