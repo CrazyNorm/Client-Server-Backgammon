@@ -161,13 +161,13 @@ public class Game {
     }
 
     public void nextTurn() {
+        // update turn count (only when both player's have taken a turn)
+        if (getColour(currentPlayer) == BGColour.BLACK) turnCount++;
+
         // change current player
         if (currentPlayer == Player.Client) currentPlayer = Player.Opponent;
-        else {
-            currentPlayer = Player.Client;
-            // update turn count (only when both player's have taken a turn)
-            turnCount++;
-        }
+        else currentPlayer = Player.Client;
+
         // deactivate selection
         highlightedMoves.clear();
         selectedPoint = -1;
@@ -725,7 +725,7 @@ public class Game {
             if (i == 24 && turnCount < 4) continue;
 
             // check bearing off
-            if (i < 6 && highestPoint <= 6) {
+            if (i <= 6 && highestPoint <= 6) {
                 // exact bear off
                 if (i == domino.getSide1())
                     parent.addChild(new MoveNode(
@@ -742,6 +742,7 @@ public class Game {
                                 i,
                                 0,
                                 domino.getSide1(),
+                                dist,
                                 moves)
                         );
             }
