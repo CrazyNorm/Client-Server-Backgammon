@@ -1,6 +1,5 @@
 package com.example.dominobackgammonclient.ui
 
-import android.os.Build
 import androidx.lifecycle.ViewModel
 import com.example.dominobackgammonclient.client.ClientThread
 import com.example.dominobackgammonclient.client.pojo.*
@@ -54,7 +53,7 @@ class BGViewModel : ViewModel() {
         _client = ClientThread(address, this)
         _client.start()
         val m = Message()
-        m.connect = Connect(Build.MODEL, "any")
+        m.connect = Connect(uiState.value.playerName, "any")
         _client.queueMessage(m)
     }
 
@@ -69,6 +68,14 @@ class BGViewModel : ViewModel() {
             currentState.copy(
                 connecting = false,
                 connectionFailed = true
+            )
+        }
+    }
+
+    fun updatePlayerName(newName: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                playerName = newName
             )
         }
     }

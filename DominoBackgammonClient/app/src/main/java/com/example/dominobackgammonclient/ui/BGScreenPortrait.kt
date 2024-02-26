@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,8 +19,6 @@ import com.example.dominobackgammonclient.ui.dominoes.DominoListHorizontal
 import com.example.dominobackgammonclient.ui.overlays.ConnectOverlay
 import com.example.dominobackgammonclient.ui.overlays.GameEndOverlay
 import com.example.dominobackgammonclient.ui.overlays.WaitingOverlay
-import com.example.dominobackgammonclient.ui.theme.DarkGreen
-import com.example.dominobackgammonclient.ui.theme.DarkRed
 
 @Composable
 fun BGScreenPortrait(
@@ -34,7 +33,9 @@ fun BGScreenPortrait(
         ConnectOverlay(
             onClick = { bgViewModel.sendConnect() },
             connectionFailed = uiState.connectionFailed,
-            disableButton = uiState.connecting
+            disableButton = uiState.connecting,
+            playerName = uiState.playerName,
+            onNameChanged = { name -> bgViewModel.updatePlayerName(name) }
         )
 
     else if (!uiState.started)
@@ -56,7 +57,7 @@ fun BGScreenPortrait(
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
-                .background(DarkGreen)
+                .background(MaterialTheme.colorScheme.secondary)
                 .padding(vertical = 10.dp)
         ) {
 
@@ -84,7 +85,7 @@ fun BGScreenPortrait(
                 highlightedPoints = gameState.highlightedMoves,
                 onClickPoint = { p -> bgViewModel.selectPiece(p) },
                 modifier = Modifier
-                    .background(DarkRed)
+                    .background(MaterialTheme.colorScheme.primary)
                     .weight(.5f)
             )
 

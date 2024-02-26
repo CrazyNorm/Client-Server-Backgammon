@@ -5,14 +5,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.dominobackgammonclient.ui.theme.DarkRed
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 @Composable
@@ -57,7 +54,6 @@ fun ControlButtonsRow(
         Button(
             onClick = onUndo,
             enabled = enableUndo,
-            colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             modifier = Modifier.weight(0.5f)
         ) {
             Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
@@ -66,7 +62,6 @@ fun ControlButtonsRow(
         Button(
             onClick = onSubmit,
             enabled = enableSubmit,
-            colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             modifier = Modifier.weight(0.5f)
         ) {
             Icon(imageVector = Icons.Default.Check, contentDescription = "Submit")
@@ -89,7 +84,6 @@ fun ControlButtonsColumn(
         Button(
             onClick = onSubmit,
             enabled = enableSubmit,
-            colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             contentPadding = PaddingValues(1.dp),
             modifier = Modifier.weight(0.5f)
         ) {
@@ -99,7 +93,6 @@ fun ControlButtonsColumn(
         Button(
             onClick = onUndo,
             enabled = enableUndo,
-            colors = ButtonDefaults.buttonColors(DarkRed, Color.White),
             contentPadding = PaddingValues(1.dp),
             modifier = Modifier.weight(0.5f)
         ) {

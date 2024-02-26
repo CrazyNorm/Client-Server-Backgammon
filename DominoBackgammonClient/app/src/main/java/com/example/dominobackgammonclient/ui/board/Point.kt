@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +30,7 @@ fun Point(
     Box(modifier) {
         var mod: Modifier = Modifier.clickable { onClick() };
         if (rotate) mod = mod.rotate(180f)
-        if (data.pointSelected) mod = mod.border(5.dp, Color.Green)
+        if (data.pointSelected) mod = mod.border(5.dp, MaterialTheme.colorScheme.tertiary)
 
         Point(pointColour, mod)
 
@@ -40,7 +41,7 @@ fun Point(
         ) {
             var i = 0
             // modifier highlights top / bottom piece if selected
-            val pieceMod = if (data.pieceSelected) Modifier.border(5.dp, Color.Green) else Modifier
+            val pieceMod = if (data.pieceSelected) Modifier.border(5.dp, MaterialTheme.colorScheme.tertiary) else Modifier
 
             if (data.count > 5) {
                 if (!rotate) Piece(data.colour, data.count, pieceMod)

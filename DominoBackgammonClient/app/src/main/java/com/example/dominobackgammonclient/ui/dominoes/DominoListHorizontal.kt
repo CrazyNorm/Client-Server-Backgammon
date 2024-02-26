@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -59,7 +60,7 @@ fun DominoListHorizontal(
                     )
                 } else {
                     val mod = if (item.isAvailable) Modifier
-                    else if (item.isSelected) Modifier.border(5.dp, Color.Green)
+                    else if (item.isSelected) Modifier.border(5.dp, MaterialTheme.colorScheme.tertiary)
                     else if (item.isBlocked) Modifier.alpha(0.8f)
                     else Modifier.alpha(0.5f)
 
