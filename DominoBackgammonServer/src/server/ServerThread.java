@@ -65,6 +65,9 @@ public class ServerThread extends Thread {
     public String getPlayerName() {
         return name;
     }
+    public String getOpponentType() {
+        return opponent;
+    }
 
     public Queue<Object> getMessageQueue() {
         return messageQueue;
@@ -169,9 +172,10 @@ public class ServerThread extends Thread {
                 // once connect is received, register with server then stop waiting
                 if (r.isApprove()) {
                     name = message.getConnect().getPlayerName();
+                    opponent = message.getConnect().getOpponentType();
+                    System.out.println(name + " connected against " + opponent);
                     DBGServer.joinQueue(this);
                     connected = true;
-                    System.out.println(name + " connected");
                     break;
                 }
             }

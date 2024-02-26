@@ -48,9 +48,36 @@ public class DBGServer {
         // join queue for game matching
         // setup ai games
 
-        // if 2 players in queue, start game between them
-        if (!queue.isEmpty()) {
-            ServerThread opponent = queue.poll();
+        // check for a valid opponent in the queue
+        ServerThread opponent = null;
+        // if new client has no opponent preference
+        if (thread.getOpponentType().equals("any"))
+            for (ServerThread player: queue)
+                if (player.getOpponentType().equals("any") ||
+                        player.getOpponentType().equals("name:" + thread.getPlayerName())) {
+                    opponent = player;
+                    queue.remove(player);
+                    break;
+                }
+        // if new client requests a specific opponent name
+        if (thread.getOpponentType().startsWith("name:")) {
+            String opponentName = thread.getOpponentType().substring(5);
+            for (ServerThread player: queue) {
+                if (player.getPlayerName().equals(opponentName)) {
+                    // check waiting player is ok to player against new client
+                    if (player.getOpponentType().equals("any") ||
+                            player.getOpponentType().equals("name:" + thread.getPlayerName())) {
+                        opponent = player;
+                        queue.remove(player);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // start game if an opponent id found
+        if (opponent != null) {
+            // register opponents for each thread
             thread.addPlayer(opponent.getMessageQueue(), opponent.getPlayerName());
             opponent.addPlayer(thread.getMessageQueue(), thread.getPlayerName());
 
