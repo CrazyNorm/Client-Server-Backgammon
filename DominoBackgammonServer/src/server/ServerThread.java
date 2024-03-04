@@ -521,9 +521,7 @@ public class ServerThread extends Thread {
                 // queue response
                 messageQueue.add(r);
                 if (reset) {
-                    Message resetMessage = new Message("");
-                    resetMessage.setReset(new Reset());
-                    messageQueue.add(resetMessage);
+                    sendReset(out, in);
                 }
             }
 
@@ -672,6 +670,8 @@ public class ServerThread extends Thread {
 
         Message reset = new Message(newIdemToken());
         reset.setReset(new Reset(
+                game.getCurrentPlayer(),
+                game.getTurnCount(),
                 Arrays.asList(
                     new PieceList(Player.White, game.getPieces(Player.White)),
                     new PieceList(Player.Black, game.getPieces(Player.Black))
