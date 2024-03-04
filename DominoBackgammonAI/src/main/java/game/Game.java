@@ -193,6 +193,11 @@ public class Game {
         // finds all available moves using the given domino
         List<byte[]> moves = new ArrayList<>();
 
+        // check for doubles
+        if (domino[0] == domino[1]) {
+            return findMovesDouble(domino[0]);
+        }
+
         // side 1 first
         List<byte[]> s1Moves = findMoves(domino[0]);
         for (byte[] m1: s1Moves) {
@@ -240,7 +245,75 @@ public class Game {
         return moves;
     }
 
-    public List<byte[]> findMoves (byte dist) {
+    private List<byte[]> findMovesDouble(byte dbl) {
+        // finds all available moves using the given double
+        List<byte[]> moves = new ArrayList<>();
+
+        int longestChain = 0; // records longest chain of moves
+
+        // 4x nested for loop :(
+        // need to know result of applying 4 moves in order
+        // could refactor to recursion?
+
+        // finds set of 1st moves
+        List<byte[]> dblMoves1 = findMoves(dbl);
+        for (byte[] m1: dblMoves1) {
+            // apply move to temp game state
+            Game tempGame1 = new Game(this);
+            tempGame1.movePiece(m1[0], m1[1]);
+
+            // find next set of moves
+            List<byte[]> dblMoves2 = tempGame1.findMoves(dbl);
+            if (dblMoves2.isEmpty() && longestChain <= 1) {
+                longestChain = 1;
+                moves.add(
+                        new byte[]{m1[0], m1[1]}
+                );
+            }
+            for (byte[] m2: dblMoves2) {
+                // apply move to temp game state
+                Game tempGame2 = new Game(tempGame1);
+                tempGame2.movePiece(m2[0], m2[1]);
+
+                // find next set of moves
+                List<byte[]> dblMoves3 = tempGame2.findMoves(dbl);
+                if (dblMoves3.isEmpty() && longestChain <= 2) {
+                    longestChain = 2;
+                    moves.add(
+                            new byte[]{m1[0], m1[1], m2[0], m2[1]}
+                    );
+                }
+                for (byte[] m3 : dblMoves3) {
+                    // apply move to temp game state
+                    Game tempGame3 = new Game(tempGame2);
+                    tempGame3.movePiece(m3[0], m3[1]);
+
+                    // find next set of moves
+                    List<byte[]> dblMoves4 = tempGame3.findMoves(dbl);
+                    if (!dblMoves4.isEmpty()) longestChain = 4;
+                    else if (longestChain <= 3) {
+                        longestChain = 3;
+                        moves.add(
+                                new byte[]{m1[0], m1[1], m2[0], m2[1], m3[0], m3[1]}
+                        );
+                    }
+                    for (byte[] m4 : dblMoves4)
+                        moves.add(
+                                new byte[]{m1[0], m1[1], m2[0], m2[1], m3[0], m3[1], m4[0], m4[1]}
+                        );
+                }
+            }
+        }
+
+        // remove moves that are shorter than the longest chain
+        int targetLen = longestChain * 2;
+        moves.removeIf(x -> x.length < targetLen);
+
+
+        return moves;
+    }
+
+    private List<byte[]> findMoves(byte dist) {
         // finds all available moves for a single distance
         List<byte[]> moves = new ArrayList<>();
 
