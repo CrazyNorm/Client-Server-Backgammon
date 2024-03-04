@@ -161,7 +161,13 @@ public class ServerThread extends Thread {
                 Response r = new Response(idem_tok);
                 if (message.isMalformed()) r.setDeny(new Deny("Malformed"));
                 else if (!message.isConnect()) r.setDeny(new Deny("Connect first"));
-                else r.setApprove(new Approve());
+                else if (message.getConnect().getOpponentType().startsWith("ai:")){
+                    String opponentType = message.getConnect().getOpponentType();
+                    if (!opponentType.matches("^ai:(random|(minimax|mcts)-[1-5])$"))
+                        r.setDeny(new Deny("Invalid AI config"));
+                    else if (!DBGServer.isAIAvailable()) r.setDeny(new Deny("AI unavailable"));
+                    else r.setApprove(new Approve());
+                } else r.setApprove((new Approve()));
 
                 // send response
                 String xml = protocolMapper.serialize(r);

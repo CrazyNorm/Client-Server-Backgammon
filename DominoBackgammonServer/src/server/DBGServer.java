@@ -4,9 +4,11 @@ import game.common.Game;
 import game.common.Player;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 
 public class DBGServer {
@@ -20,6 +22,11 @@ public class DBGServer {
 
     private final static Queue<ServerThread> queue = new ArrayDeque<>();
 
+    private static Socket controllerSocket;
+    private static PrintWriter controllerOut;
+    private static final String CONTROLLER_ADDRESS = "127.0.0.1";
+    private static final int CONTROLLER_PORT = 8082;
+
     public static void main(String[] args) {
         try(ServerSocket serverSocket = new ServerSocket(PORT)) {
             // output network interface info
@@ -28,6 +35,14 @@ public class DBGServer {
                 for (InetAddress address: Collections.list(netint.getInetAddresses()))
                     System.out.println(address);
                 System.out.println();
+            }
+
+            // initialise AI controller connection
+            try {
+                controllerSocket = new Socket(CONTROLLER_ADDRESS, CONTROLLER_PORT);
+                controllerOut = new PrintWriter(controllerSocket.getOutputStream(), true);
+            } catch(IOException e) {
+                System.out.println("AI unavailable");
             }
             System.out.println();
 
@@ -46,7 +61,6 @@ public class DBGServer {
     public static void joinQueue(ServerThread thread) {
         // todo: check periodically
         // join queue for game matching
-        // setup ai games
 
         // check for a valid opponent in the queue
         ServerThread opponent = null;
@@ -73,6 +87,22 @@ public class DBGServer {
                     }
                 }
             }
+        }
+        // if new client requests and ai opponent
+        if (thread.getOpponentType().startsWith("ai:")) {
+            // client specifies ai request as 'ai:[type]-[difficulty]'
+
+            String aiDetails = "name:" + thread.getPlayerName() + ";";
+
+            String aiType = thread.getOpponentType().substring(3);
+            aiDetails += "type:" + aiType.split("-", 2)[0] + ";";
+            if (!aiType.equals("random"))
+                aiDetails += "difficulty:" + aiType.split("-", 2)[1] + ";";
+
+            // sends ai details to controller to initialise an ai opponent
+            controllerOut.println(aiDetails);
+
+            // doesn't specify an opponent, so new client joins queue until new ai connects
         }
 
         // start game if an opponent id found
@@ -103,5 +133,11 @@ public class DBGServer {
         // leave game matching queue when client disconnects
 
         queue.remove(thread);
+    }
+
+
+    public static boolean isAIAvailable() {
+        // checks if AI controller is available
+        return (controllerOut != null);
     }
 }
