@@ -9,8 +9,8 @@ public class Game {
     // (plus 36 static bytes)
 
     private final byte[] points;
-    private final byte[] bar;
-    private final byte[] off;
+    private final byte[] bar;  // black, white
+    private final byte[] off;  // black, white
 
     private final byte[] dominoes; // 1 for white, -1 for black, 0 for neither
     private final static byte[][] dominoList = new byte[][] {
@@ -26,7 +26,7 @@ public class Game {
             {6, 8, 10, 13, 15, 17, 18}
     };
 
-    private byte player; // 1 = white, -1 = black
+    private byte player; // 1 = black, -1 = white
     private byte whiteSet;
     private byte turnCount;
 
@@ -41,7 +41,7 @@ public class Game {
         for (byte d: dominoes) d = 0;
         this.player = player;
         this.whiteSet = 0;
-        this.turnCount = 0;
+        this.turnCount = 1;
     }
 
     public Game(Game oldGame) {
@@ -59,8 +59,14 @@ public class Game {
 
     public void addPieces(int[] indices, byte player) {
         for (int ind: indices) {
-            if (ind == 0) off[ind] += player;
-            else if (ind == 25) bar[ind] += player;
+            if (ind == 0) {
+                if (player == 1) off[0] += player;
+                else off[1] += player;
+            }
+            else if (ind == 25) {
+                if (player == 1) bar[0] += player;
+                else bar[1] += player;
+            }
             else points[ind - 1] += player;
         }
     }
@@ -112,6 +118,16 @@ public class Game {
     public byte[] getDomino(int index) {
         // returns the value of the domino at the given index
         return dominoList[index];
+    }
+
+    public List<byte[]> getAvailableDominoes(byte player) {
+        // gets all dominoes available to be used by the given player
+        List<byte[]> availableDominoes = new ArrayList<>();
+
+        for (int i = 0; i < dominoes.length; i++)
+            if (dominoes[i] == player) availableDominoes.add(dominoList[i]);
+
+        return availableDominoes;
     }
 
     public void useDomino(int index) {
@@ -187,6 +203,7 @@ public class Game {
             points[end-1] += player;
         }
     }
+
 
 
     public List<byte[]> findMoves(byte[] domino) {
@@ -344,7 +361,7 @@ public class Game {
                 if (player == -1 && i - dist < 1) continue;
 
                 // skip if moving back men too early
-                if (turnCount < 3) {
+                if (turnCount < 4) {
                     if (player == 1 && i == 1) continue;
                     if (player == -1 && i == 24) continue;
                 }
