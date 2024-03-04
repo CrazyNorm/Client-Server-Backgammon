@@ -38,6 +38,7 @@ public class ServerThread extends Thread {
 
     private String name;
     private String opponent;
+    private boolean ai;
 
     private Player colour;
     private Game game;
@@ -93,8 +94,8 @@ public class ServerThread extends Thread {
             waitForStart(out, in);
 
             if (game != null) {
-                // send start message
-                sendStart(out, in);
+                // send start message (doesn't bother for ai)
+                if (!ai) sendStart(out, in);
 
                 // main server game loop
                 turnLoop(out, in);
@@ -179,6 +180,7 @@ public class ServerThread extends Thread {
                 if (r.isApprove()) {
                     name = message.getConnect().getPlayerName();
                     opponent = message.getConnect().getOpponentType();
+                    ai = message.getConnect().isAI();
                     System.out.println(name + " connected against " + opponent);
                     DBGServer.joinQueue(this);
                     connected = true;
@@ -221,7 +223,7 @@ public class ServerThread extends Thread {
             }
 
             if (lines.isEmpty()) {
-                handleKeepAlive(out, in);
+                if (!ai) handleKeepAlive(out, in);
                 continue;
             }
 
@@ -403,12 +405,13 @@ public class ServerThread extends Thread {
                 String xml = protocolMapper.serialize(o);
                 if (o instanceof Message m) {
                     if (m.isTurn())
-                        sendTurn(out, in, xml);
+                        if (!ai) sendTurn(out, in, xml);
                     else if (m.isNextTurn()) {
-                        sendNextTurn(out, in, xml);
+                        if (!ai) sendNextTurn(out, in, xml);
                         if (m.getNextTurn().isWin()) gameOver = true;
                         if (m.getNextTurn().isSwap() && colour == game.getCurrentPlayer())
                             game.swapHands();
+                        if (ai && !gameOver) sendAITurn(out, in);
                     }
                 }
                 else if (o instanceof Response r) {
@@ -436,7 +439,7 @@ public class ServerThread extends Thread {
             }
 
             if (lines.isEmpty()) {
-                handleKeepAlive(out, in);
+                if (!ai) handleKeepAlive(out, in);
                 continue;
             }
 
@@ -665,7 +668,7 @@ public class ServerThread extends Thread {
         // generates and sends a reset message
         // doesn't expect a response, but will keep sending resets until it receives the correct hash for the turn
 
-        System.out.println("reset " + name);
+//        System.out.println("reset " + name);
 
         Message reset = new Message(newIdemToken());
         reset.setReset(new Reset(
@@ -788,6 +791,14 @@ public class ServerThread extends Thread {
             }
         }
 
+    }
+
+
+    private void sendAITurn(PrintWriter out, BufferedReader in) throws IOException {
+        // sends a reset message to an AI client to trigger the AI taking its turn
+        if (game.getCurrentPlayer() == colour)
+            sendReset(out, in);
+        // doesn't expect any response yet
     }
 
 
