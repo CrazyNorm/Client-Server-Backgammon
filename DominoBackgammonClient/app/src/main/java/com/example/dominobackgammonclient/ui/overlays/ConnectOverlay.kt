@@ -25,6 +25,7 @@ fun ConnectOverlay(
     connectionFailed: Boolean,
     disableButton: Boolean,
     playerName: String,
+    placeholderName: String,
     onNameChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -38,11 +39,13 @@ fun ConnectOverlay(
     ) {
         // name text box
         Column {
-            Text(
-                text = "Enter your display name:",
-                color = MaterialTheme.colorScheme.onSurface
+            TextField(
+                value = playerName,
+                onValueChange = onNameChanged,
+                placeholder = { Text(placeholderName) },
+                label = { Text("Your name:") },
+                singleLine = true
             )
-            TextField(playerName, onNameChanged)
         }
 
         // connect button
@@ -74,7 +77,8 @@ fun PreviewBoardWithBar() {
             onClick = { },
             connectionFailed = false,
             disableButton = false,
-            playerName = "Player",
+            playerName = "",
+            placeholderName = "Player",
             onNameChanged = { _ -> })
     }
 }

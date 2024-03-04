@@ -5,7 +5,9 @@ data class UIState(
     var connecting: Boolean = false,
     var connected: Boolean = false,
     var connectionFailed: Boolean = false,
-    var playerName: String = "Player",
+    var playerName: String = "",
+    val nameDefault: String = "Player",
+    var opponentName: String = "",
     // waiting for server messages
     var started: Boolean = false,
     var waiting: Boolean = false,

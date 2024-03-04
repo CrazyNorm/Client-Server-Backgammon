@@ -53,7 +53,11 @@ class BGViewModel : ViewModel() {
         _client = ClientThread(address, this)
         _client.start()
         val m = Message()
-        m.connect = Connect(uiState.value.playerName, "any")
+        if (_uiState.value.playerName == "")
+            _uiState.update { currentState ->
+                currentState.copy(playerName = currentState.nameDefault)
+            }
+        m.connect = Connect(_uiState.value.playerName, "any")
         _client.queueMessage(m)
     }
 
@@ -83,12 +87,14 @@ class BGViewModel : ViewModel() {
 
     // starting game
     fun startGame(clientColour: PlayerPojo, opponentName: String) {
-        println("opponent: $opponentName")
         if (clientColour == PlayerPojo.White) _gameState.update { Game(BGColour.WHITE) }
         else if (clientColour == PlayerPojo.Black) _gameState.update { Game(BGColour.BLACK) }
 
         _uiState.update { currentState ->
-            currentState.copy(started = true)
+            currentState.copy(
+                started = true,
+                opponentName = opponentName
+            )
         }
 
         _gameState.value.generateValidMoves()
@@ -256,6 +262,11 @@ class BGViewModel : ViewModel() {
 
     fun startOver() {
         // completely resets ui state
-        _uiState.update { UIState() }
+        _uiState.update {
+            UIState(
+                colourScheme = _uiState.value.colourScheme,
+                playerName = _uiState.value.playerName
+            )
+        }
     }
 }
