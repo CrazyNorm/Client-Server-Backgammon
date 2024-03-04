@@ -22,7 +22,7 @@ class BGViewModel : ViewModel() {
     // initialise client thread
     private lateinit var _client: ClientThread
 
-    private val _uiState = MutableStateFlow(UIState())
+    private val _uiState = MutableStateFlow(UIState(colourScheme = 1)) // TODO change colour scheme
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
     // client side UI changes during turn

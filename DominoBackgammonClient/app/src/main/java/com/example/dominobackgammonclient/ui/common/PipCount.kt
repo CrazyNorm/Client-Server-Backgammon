@@ -3,6 +3,7 @@ package com.example.dominobackgammonclient.ui.common
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,11 +27,13 @@ fun PipCount(
         modifier = modifier
     ) {
         Piece(colour)
-        if (simple) Text("  ")
-        else Text("Moves left:")
+        Text(
+            if (simple) " " else "Moves left:",
+            color = MaterialTheme.colorScheme.onSecondary)
         Text(
             count.toString(),
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSecondary
         )
     }
 }

@@ -10,11 +10,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.example.dominobackgammonclient.ui.BGScreenLandscape
-import com.example.dominobackgammonclient.ui.BGScreenPortrait
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dominobackgammonclient.ui.BGApp
+import com.example.dominobackgammonclient.ui.BGViewModel
 import com.example.dominobackgammonclient.ui.theme.DominoBackgammonClientTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,15 +28,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
-            DominoBackgammonClientTheme {
-                when(windowSizeClass.widthSizeClass) {
-                    WindowWidthSizeClass.Compact -> {
-                        BGScreenPortrait()
-                    }
-                    else -> {
-                        BGScreenLandscape()
-                    }
-                }
+            val viewModel: BGViewModel = viewModel()
+            val uiState by viewModel.uiState.collectAsState()
+
+            DominoBackgammonClientTheme(colourScheme = uiState.colourScheme) {
+                BGApp((windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact), viewModel)
             }
         }
 
