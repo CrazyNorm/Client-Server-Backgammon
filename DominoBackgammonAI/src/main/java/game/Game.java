@@ -1,8 +1,11 @@
 package game;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Game {
     // streamlined game representation
-    // each game instance uses 51 bytes (plus object overheads?)
+    // each game instance uses 52 bytes (plus object overheads?)
     // (plus 36 static bytes)
 
     private final byte[] points;
@@ -25,6 +28,7 @@ public class Game {
 
     private byte player; // 1 = white, -1 = black
     private byte whiteSet;
+    private byte turnCount;
 
 
     public Game(byte player) {
@@ -37,6 +41,7 @@ public class Game {
         for (byte d: dominoes) d = 0;
         this.player = player;
         this.whiteSet = 0;
+        this.turnCount = 0;
     }
 
     public Game(Game oldGame) {
@@ -48,6 +53,7 @@ public class Game {
         this.dominoes = oldGame.dominoes.clone();
         this.player = oldGame.player;
         this.whiteSet = oldGame.whiteSet;
+        this.turnCount = oldGame.turnCount;
     }
 
 
@@ -55,7 +61,7 @@ public class Game {
         for (int ind: indices) {
             if (ind == 0) off[ind] += player;
             else if (ind == 25) bar[ind] += player;
-            else points[ind + 1] += player;
+            else points[ind - 1] += player;
         }
     }
 
@@ -78,6 +84,7 @@ public class Game {
 
     public void nextTurn() {
         player *= -1;
+        turnCount++;
     }
 
     public byte getWhiteSet() {
@@ -87,6 +94,15 @@ public class Game {
     public void setWhiteSet(byte whiteSet) {
         this.whiteSet = whiteSet;
     }
+
+    public byte getTurnCount() {
+        return turnCount;
+    }
+
+    public void setTurnCount(byte turnCount) {
+        this.turnCount = turnCount;
+    }
+
 
     public boolean checkDomino(int index) {
         // checks if domino at given index is available for current player
@@ -170,5 +186,81 @@ public class Game {
             }
             dominoes[end] += player;
         }
+    }
+
+
+    public List<byte[]> findMoves(byte[] domino) {
+        // finds all available moves using the given domino
+        List<byte[]> moves = new ArrayList<>();
+
+        // side 1 first moves
+        List<byte[]> s1Moves = findMoves(domino[0]);
+        for (byte[] b: s1Moves)
+            System.out.println(b[0] + " " + b[1]);
+
+
+
+        return moves;
+    }
+
+    public List<byte[]> findMoves (byte dist) {
+        // finds all available moves for a single distance
+        List<byte[]> moves = new ArrayList<>();
+
+        // check the bar
+        byte barInd = 0;
+        if (player == -1) barInd = 1;
+        if (bar[barInd] > 0) {
+            int entryInd;
+            if (player == 1) entryInd = dist;
+            else entryInd = 25 - dist;
+            int entryPoint = points[entryInd - 1] * player;
+            if (entryPoint >= -1) moves.add(
+                    new byte[]{25, (byte) entryInd}
+            );
+        }
+        else {
+            // find normal moves
+            int furthestPoint = -1;
+            for (int i = 1; i < points.length + 1; i++) {
+                if (player == 1 && points[i-1] > 0 && furthestPoint == -1) furthestPoint = i;
+                else if (player == -1 && points[i-1] < 0) furthestPoint = i;
+
+                // skip if point has none of the correct player's pieces
+                if (points[i-1] * player < 1) continue;
+
+                // skip if move would fall off board
+                if (player == 1 && i + dist > 24) continue;
+                if (player == -1 && i - dist < 1) continue;
+
+                // skip if moving back men too early
+                if (turnCount < 3) {
+                    if (player == 1 && i == 1) continue;
+                    if (player == -1 && i == 24) continue;
+                }
+
+                int endInd;
+                if (player == 1) endInd = i + dist;
+                else endInd = i - dist;
+                int endPoint = points[endInd-1] * player;
+                if (endPoint >= -1) moves.add(
+                        new byte[] {(byte) i, (byte) endInd}
+                );
+            }
+
+            // find bearing off moves
+            if (player == 1 && furthestPoint > 18) {
+                for (int i = 19; i < 25; i++) {
+                    if (i + dist == 25) moves.add(
+                            new byte[] {(byte) i, 0}
+                    );
+                    else if (i + dist > 25 && i == furthestPoint) moves.add(
+                            new byte[] {(byte) i, 0}
+                    );
+                }
+            }
+        }
+
+        return moves;
     }
 }
