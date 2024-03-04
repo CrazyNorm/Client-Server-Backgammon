@@ -170,7 +170,7 @@ public class Game {
             if (player == 1) bar[0]--;
             else bar[1]--;
         }
-        else dominoes[start] -= player;
+        else points[start-1] -= player;
 
         // checks for bear off
         if (end == 0) {
@@ -179,12 +179,12 @@ public class Game {
         }
         else {
             // checks for hit
-            if (dominoes[end] == -player) {
-                dominoes[end] += player;
+            if (points[end-1] == -player) {
+                points[end-1] += player;
                 if (player == 1) bar[1]++;
                 else bar[0]++;
             }
-            dominoes[end] += player;
+            points[end-1] += player;
         }
     }
 
@@ -193,12 +193,49 @@ public class Game {
         // finds all available moves using the given domino
         List<byte[]> moves = new ArrayList<>();
 
-        // side 1 first moves
+        // side 1 first
         List<byte[]> s1Moves = findMoves(domino[0]);
-        for (byte[] b: s1Moves)
-            System.out.println(b[0] + " " + b[1]);
+        for (byte[] m1: s1Moves) {
+            // apply move to temp game state
+            Game tempGame = new Game(this);
+            tempGame.movePiece(m1[0], m1[1]);
+            // find moves for other domino side
+            List<byte[]> s2Moves2 = tempGame.findMoves(domino[1]);
+            for (byte[] m2: s2Moves2)
+                moves.add(
+                        new byte[] {m1[0], m1[1], m2[0], m2[1]}
+                );
+        }
+        // side 2 first
+        List<byte[]> s2Moves = findMoves(domino[1]);
+        for (byte[] m1: s2Moves) {
+            // apply move to temp game state
+            Game tempGame = new Game(this);
+            tempGame.movePiece(m1[0], m1[1]);
+            // find moves for other domino side
+            List<byte[]> s1Moves2 = tempGame.findMoves(domino[0]);
+            for (byte[] m2: s1Moves2)
+                moves.add(
+                        new byte[] {m1[0], m1[1], m2[0], m2[1]}
+                );
+        }
 
+        // if moves is empty, it is impossible to use both sides
+        // add the moves that use just the larger side
+        if (moves.isEmpty()) {
+            if (domino[0] > domino[1]) moves.addAll(s1Moves);
+            else moves.addAll(s2Moves);
+        }
 
+        // if still empty, it is impossible to use the larger side at all
+        // add the moves that use just the smaller side
+        if (moves.isEmpty()) {
+            if (domino[0] > domino[1]) moves.addAll(s2Moves);
+            else moves.addAll(s1Moves);
+        }
+
+        // if still empty, it is impossible to make any moves with this domino
+        // so return the list still empty
 
         return moves;
     }
