@@ -19,7 +19,8 @@ public class RandomAI extends AI{
 
         // pick random set of moves for the chosen domino
         List<byte[]> moves = game.findMoves(chosenDomino);
-        byte[] chosenMoveSeq = moves.get(RAND.nextInt(moves.size()));
+        byte[] chosenMoveSeq = new byte[0];
+        if (!moves.isEmpty()) chosenMoveSeq = moves.get(RAND.nextInt(moves.size()));
 
         // build pojo for the chosen turn
         TurnPojo turn;

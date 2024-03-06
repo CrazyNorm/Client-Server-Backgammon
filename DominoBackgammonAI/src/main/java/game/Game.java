@@ -1,5 +1,10 @@
 package game;
 
+import client.pojo.DominoPojo;
+import client.pojo.HandPojo;
+import client.pojo.PieceList;
+import client.pojo.Reset;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +34,7 @@ public class Game {
     private byte player; // 1 = black, -1 = white
     private byte whiteSet;
     private byte turnCount;
+    private boolean swapped;
 
 
     public Game(byte player) {
@@ -42,6 +48,7 @@ public class Game {
         this.player = player;
         this.whiteSet = 0;
         this.turnCount = 1;
+        this.swapped = false;
     }
 
     public Game(Game oldGame) {
@@ -54,11 +61,49 @@ public class Game {
         this.player = oldGame.player;
         this.whiteSet = oldGame.whiteSet;
         this.turnCount = oldGame.turnCount;
+        this.swapped = oldGame.swapped;
+    }
+
+    public static Game gameFromReset(Reset reset) {
+        // player
+        byte player = 1;
+        if (reset.getPlayer() == Player.White) player = -1;
+        Game game = new Game(player);
+
+        // turn count
+        game.setTurnCount((byte) reset.getTurnCount());
+        game.setSwapped(reset.isSwapped());
+
+        // pieces
+        for (PieceList pl: reset.getPieces()) {
+            byte piecePlayer = 1;
+            if (pl.getColour() == Player.White) piecePlayer = -1;
+            int[] indices = new int[pl.getIndices().size()];
+            for (int i = 0; i < indices.length; i++)
+                indices[i] = pl.getIndices().get(i);
+            game.addPieces(indices, piecePlayer);
+        }
+
+        // dominoes
+        for (HandPojo h: reset.getHands()) {
+            byte handPlayer = 1;
+            if (h.getColour() == Player.White) {
+                handPlayer = -1;
+                game.setWhiteSet((byte) h.getSet());
+            }
+            for (DominoPojo dom: h.getDominoes()) {
+                if (dom.getSide1() == dom.getSide2() && !reset.isSwapped()) continue;
+                if (dom.isAvailable()) game.addDomino(dom.getSide1(), dom.getSide2(), handPlayer);
+            }
+        }
+
+        return game;
     }
 
 
     public void addPieces(int[] indices, byte player) {
         for (int ind: indices) {
+            if (player == 1 && ind != 0 && ind != 25) ind = 25 - ind;
             if (ind == 0) {
                 if (player == 1) off[0] += player;
                 else off[1] += player;
@@ -109,6 +154,13 @@ public class Game {
         this.turnCount = turnCount;
     }
 
+    public boolean isSwapped() {
+        return swapped;
+    }
+
+    public void setSwapped(boolean swapped) {
+        this.swapped = swapped;
+    }
 
     public boolean checkDomino(int index) {
         // checks if domino at given index is available for current player
@@ -168,6 +220,11 @@ public class Game {
             for (byte ind: dominoSets[whiteSet - 1]) dominoes[ind] = -1;
             whiteSet = (byte) (3 - whiteSet); // 3 - x swaps x between 1 & 2
             for (byte ind: dominoSets[whiteSet - 1]) dominoes[ind] = 1;
+            if (!swapped) {
+                swapped = true;
+                dominoes[0] = -1;
+                dominoes[1] = 1;
+            }
         }
     }
 

@@ -8,6 +8,7 @@ import client.pojo.Message;
 import client.pojo.Response;
 import client.xml.ProtocolMapper;
 import controller.NameGenerator;
+import game.Game;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class AIClientThread extends Thread {
     private final ProtocolMapper protocolMapper;
 
     // idempotence handling
-    private final Map<String, String> responseLog;
+    private final Map<String, String> messageLog;
     private final Set<String> usedTokens;
 
 
@@ -45,7 +46,7 @@ public class AIClientThread extends Thread {
 
         this.aiProfile = AIFactory.getAIProfile(type, difficulty);
 
-        this.responseLog = new HashMap<>();
+        this.messageLog = new HashMap<>();
         this.usedTokens = new HashSet<>();
     }
 
@@ -57,13 +58,66 @@ public class AIClientThread extends Thread {
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
         ) {
             // connect AI client to server
-            Message m = new Message(newIdemToken());
-            m.setConnect(new Connect(name, "name:" + opponent, true));
-            sendConnect(out, in, protocolMapper.serialize(m));
+            Message connect = new Message(newIdemToken());
+            connect.setConnect(new Connect(name, "name:" + opponent, true));
+            sendConnect(out, in, protocolMapper.serialize(connect));
 
-            String inLine;
-            while ((inLine = in.readLine()) != null) {
-                System.out.println(inLine);
+            String lines;
+            while((lines = in.readLine()) != null) {
+                // respond to keep-alive messages
+                if (lines.matches("<ka>[mrMR]</ka>")) {
+                    // send keep-alive
+                    if (lines.matches("<ka>[mM]</ka>")) {
+                        KeepAlive ka = new KeepAlive("r");
+                        out.println(protocolMapper.serialize(ka));
+                    }
+                    continue;
+                }
+
+                // get message length & type
+                String type = lines.substring(lines.length() - 1);
+                lines = lines.substring(0, lines.length() - 1);
+
+                // read message
+                StringBuilder doc = new StringBuilder();
+                for (int i = 0; i < Integer.parseInt(lines); i++) {
+                    String inLine = in.readLine();
+                    inLine = inLine.replaceAll("\n", "").strip();
+                    doc.append(inLine);
+                }
+
+                /// message type
+                if (type.equals("m")) {
+                    Message m = protocolMapper.deserializeMessage(doc.toString());
+
+                    // check idempotency
+                    String idem_tok = m.getIdempotencyKey();
+                    usedTokens.add(idem_tok);
+                    if (messageLog.containsKey(idem_tok)) {
+                        String xml = messageLog.get(idem_tok);
+                        out.println(xml.split("\n").length + "m");
+                        out.println(xml);
+                        continue;
+                    }
+
+                    if (m.isNextTurn() && m.getNextTurn().isDisconnect()) break;
+
+                    if (m.isReset()) {
+                        Game game = Game.gameFromReset(m.getReset());
+
+                        boolean validTurn = false;
+                        while (!validTurn) {
+                            Message turn = new Message(newIdemToken());
+                            turn.setTurn(aiProfile.chooseTurn(game));
+
+                            String xml = protocolMapper.serialize(turn);
+                            messageLog.put(m.getIdempotencyKey(), xml);
+                            validTurn = sendTurn(out, in, xml);
+                        }
+                    }
+                }
+
+                // not expecting any responses at the moment, so just ignore any that do arrive
             }
         } catch (UnknownHostException e) {
             System.err.println("Unknown host");
@@ -116,6 +170,49 @@ public class AIClientThread extends Thread {
     }
 
 
+    private boolean sendTurn(PrintWriter out, BufferedReader in, String xml) throws IOException {
+        // sends a turn, then waits for an approval
+
+        out.println(xml.split("\n").length + "m");
+        out.println(xml);
+
+        String lines;
+        boolean valid = true;
+        while((lines = in.readLine()) != null) {
+            // respond to keep-alive messages
+            if (lines.matches("<ka>[mrMR]</ka>")) {
+                // send keep-alive
+                if (lines.matches("<ka>[mM]</ka>")) {
+                    KeepAlive ka = new KeepAlive("r");
+                    out.println(protocolMapper.serialize(ka));
+                }
+                continue;
+            }
+
+            // get message length & type
+            String type = lines.substring(lines.length() - 1);
+            lines = lines.substring(0, lines.length() - 1);
+
+            // read message
+            StringBuilder doc = new StringBuilder();
+            for (int i = 0; i < Integer.parseInt(lines); i++) {
+                String inLine = in.readLine();
+                inLine = inLine.replaceAll("\n", "").strip();
+                doc.append(inLine);
+            }
+
+            // server shouldn't be sending any messages yet, so just ignore messages
+
+            // response type
+            if (type.equals("r")) {
+                Response r = protocolMapper.deserializeResponse(doc.toString());
+
+                if (r.isDeny()) valid = false;
+                break;
+            }
+        }
+        return valid;
+    }
 
 
     private String newIdemToken() {

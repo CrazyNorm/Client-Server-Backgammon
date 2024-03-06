@@ -19,8 +19,12 @@ public class TurnFactory {
         turn.addDomino(new DominoPojo(domino[0], domino[1], true));
 
         // convert moves to pojo
-        for (int i = 0; i < moves.length; i += 2)
-            turn.addMove(new MovePojo(moves[i], moves[i + 1]));
+        for (int i = 0; i < moves.length; i += 2) {
+            if (player == -1) turn.addMove(new MovePojo(moves[i], moves[i + 1]));
+            else if (moves[i] == 25) turn.addMove(new MovePojo(moves[i], 25 - moves[i + 1]));
+            else if (moves[i + 1] == 0) turn.addMove(new MovePojo(25 - moves[i], moves[i + 1]));
+            else turn.addMove(new MovePojo(25 - moves[i], 25 - moves[i + 1]));
+        }
 
 
         return turn;
