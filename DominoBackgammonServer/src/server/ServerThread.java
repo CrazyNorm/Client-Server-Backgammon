@@ -532,14 +532,15 @@ public class ServerThread extends Thread {
 
             // if turn was valid, send 'next turn' to all players
             if (validTurn) {
+                Player winner = game.checkWin();
                 game.nextTurn();
+
                 // generate next turn message
                 Message m = new Message(newIdemToken());
                 NextTurn next = new NextTurn(game.getCurrentPlayer());
 
                 if (game.checkHands()) next.setSwap(new Swap());
 
-                Player winner = game.checkWin();
                 if (winner != Player.None)
                     next.setWin(new Win(winner, game.checkWinType(winner)));
 
