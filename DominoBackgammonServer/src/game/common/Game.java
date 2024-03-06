@@ -268,6 +268,10 @@ public class Game {
         if (!swapped) swapped = true;
     }
 
+    public boolean hasSwapped() {
+        return swapped;
+    }
+
 
     public boolean checkTurn(TurnPojo turn) {
         // TODO check for using wrong number of moves
@@ -304,21 +308,23 @@ public class Game {
 
         Board restoreBoard = new Board(this.boardState);
         // check moves are valid
-        for (MovePojo move: turn.getMoves()) {
-            int start = move.getStart();
-            int end = move.getEnd();
-            // flip moves for black
-            if (currentPlayer == Player.Black) {
-                if (start < 25) start = 25 - start;
-                if (end > 0) end = 25 - end;
-            }
+        if (turn.getMoves() != null) {
+            for (MovePojo move : turn.getMoves()) {
+                int start = move.getStart();
+                int end = move.getEnd();
+                // flip moves for black
+                if (currentPlayer == Player.Black) {
+                    if (start < 25) start = 25 - start;
+                    if (end > 0) end = 25 - end;
+                }
 
-            if (!check(start, end)) {
-                // restore board to before any moves were made
-                this.boardState = restoreBoard;
-                return false;
+                if (!check(start, end)) {
+                    // restore board to before any moves were made
+                    this.boardState = restoreBoard;
+                    return false;
+                }
+                make(start, end);
             }
-            make(start, end);
         }
 
         // player, dominoes & moves all valid

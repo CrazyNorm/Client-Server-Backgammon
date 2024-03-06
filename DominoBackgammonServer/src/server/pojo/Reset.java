@@ -15,6 +15,8 @@ public class Reset {
 
     @JacksonXmlProperty(isAttribute = true)
     private final int turnCount;
+    @JacksonXmlProperty(isAttribute = true)
+    private final boolean swapped;
 
     @JacksonXmlElementWrapper(useWrapping = false)
     @JacksonXmlProperty(localName = "pieceList")
@@ -24,9 +26,10 @@ public class Reset {
     private final List<HandPojo> hands;
 
 
-    public Reset(Player player, int turnCount) {
+    public Reset(Player player, int turnCount, boolean swapped) {
         this.player = player;
         this.turnCount = turnCount;
+        this.swapped = swapped;
         this.pieces = new ArrayList<>();
         this.hands = new ArrayList<>();
     }
@@ -34,10 +37,12 @@ public class Reset {
     public Reset(
             @JsonProperty("player") Player player,
             @JsonProperty("turnCount") int turnCount,
+            @JsonProperty("swapped") boolean swapped,
             @JsonProperty("pieceList") List<PieceList> pieces,
             @JsonProperty("hand") List<HandPojo> hands) {
         this.player = player;
         this.turnCount = turnCount;
+        this.swapped = swapped;
         this.pieces = pieces;
         this.hands = hands;
     }
@@ -48,6 +53,10 @@ public class Reset {
 
     public int getTurnCount() {
         return turnCount;
+    }
+
+    public boolean isSwapped() {
+        return swapped;
     }
 
     public List<PieceList> getPieces() {

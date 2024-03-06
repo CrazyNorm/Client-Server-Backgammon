@@ -96,6 +96,8 @@ public class ServerThread extends Thread {
             if (game != null) {
                 // send start message (doesn't bother for ai)
                 if (!ai) sendStart(out, in);
+                else if (colour == Player.White) sendAITurn(out, in);
+
 
                 // main server game loop
                 turnLoop(out, in);
@@ -404,19 +406,21 @@ public class ServerThread extends Thread {
                 Object o = messageQueue.poll();
                 String xml = protocolMapper.serialize(o);
                 if (o instanceof Message m) {
-                    if (m.isTurn())
-                        if (!ai) sendTurn(out, in, xml);
+                    if (m.isTurn() && !ai)
+                        sendTurn(out, in, xml);
                     else if (m.isNextTurn()) {
                         if (!ai) sendNextTurn(out, in, xml);
                         if (m.getNextTurn().isWin()) gameOver = true;
                         if (m.getNextTurn().isSwap() && colour == game.getCurrentPlayer())
                             game.swapHands();
-                        if (ai && !gameOver) sendAITurn(out, in);
+                        if (ai && !gameOver) {
+                            sendAITurn(out, in);
+                        }
                     }
                 }
                 else if (o instanceof Response r) {
                     responseLog.put(r.getResponseTo(), xml);
-                    out.println(xml.split("\n").length + "m");
+                    out.println(xml.split("\n").length + "r");
                     out.println(xml);
                 }
             }
@@ -672,6 +676,7 @@ public class ServerThread extends Thread {
         reset.setReset(new Reset(
                 game.getCurrentPlayer(),
                 game.getTurnCount(),
+                game.hasSwapped(),
                 Arrays.asList(
                     new PieceList(Player.White, game.getPieces(Player.White)),
                     new PieceList(Player.Black, game.getPieces(Player.Black))
