@@ -27,6 +27,9 @@ public class DBGServer {
     private static final String CONTROLLER_ADDRESS = "10.0.0.134";
     private static final int CONTROLLER_PORT = 8082;
 
+    // uses a UUID for AI clients to identify their opponent
+    private static final Set<String> usedAIKeys = new HashSet<>();
+
     public static void main(String[] args) {
         try(ServerSocket serverSocket = new ServerSocket(PORT)) {
             // output network interface info
@@ -64,19 +67,32 @@ public class DBGServer {
 
         // check for a valid opponent in the queue
         ServerThread opponent = null;
+        // if the new client is an AI
+        if (thread.isAi()) {
+            for (ServerThread player: queue) {
+                if (thread.getOpponentType().equals("name:" + player.getAiKey())) {
+                    opponent = player;
+                    queue.remove(player);
+                    break;
+                }
+            }
+        }
         // if new client has no opponent preference
-        if (thread.getOpponentType().equals("any"))
-            for (ServerThread player: queue)
+        else if (thread.getOpponentType().equals("any"))
+            for (ServerThread player: queue) {
+                if (player.isAi()) continue;
                 if (player.getOpponentType().equals("any") ||
                         player.getOpponentType().equals("name:" + thread.getPlayerName())) {
                     opponent = player;
                     queue.remove(player);
                     break;
                 }
+            }
         // if new client requests a specific opponent name
-        if (thread.getOpponentType().startsWith("name:")) {
+        else if (thread.getOpponentType().startsWith("name:")) {
             String opponentName = thread.getOpponentType().substring(5);
             for (ServerThread player: queue) {
+                if (player.isAi()) continue;
                 if (player.getPlayerName().equals(opponentName)) {
                     // check waiting player is ok to player against new client
                     if (player.getOpponentType().equals("any") ||
@@ -89,10 +105,16 @@ public class DBGServer {
             }
         }
         // if new client requests and ai opponent
-        if (thread.getOpponentType().startsWith("ai:")) {
+        else if (thread.getOpponentType().startsWith("ai:")) {
             // client specifies ai request as 'ai:[type]-[difficulty]'
 
-            String aiDetails = "name:" + thread.getPlayerName() + ";";
+            // generate AI opponent key
+            String newKey = UUID.randomUUID().toString();
+            while (usedAIKeys.contains(newKey)) newKey = UUID.randomUUID().toString();
+            usedAIKeys.add(newKey);
+            thread.setAiKey(newKey);
+
+            String aiDetails = "name:" + newKey + ";";
 
             String aiType = thread.getOpponentType().substring(3);
             aiDetails += "type:" + aiType.split("-", 2)[0] + ";";
@@ -124,8 +146,7 @@ public class DBGServer {
             thread.startGame(colour, game);
             opponent.startGame(opColour, game);
         }
-        else
-            queue.add(thread);
+        else if (!thread.isAi()) queue.add(thread);
     }
 
 

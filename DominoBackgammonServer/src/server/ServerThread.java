@@ -39,6 +39,7 @@ public class ServerThread extends Thread {
     private String name;
     private String opponent;
     private boolean ai;
+    private String aiKey;
 
     private Player colour;
     private Game game;
@@ -68,6 +69,16 @@ public class ServerThread extends Thread {
     }
     public String getOpponentType() {
         return opponent;
+    }
+    public boolean isAi() {
+        return ai;
+    }
+
+    public String getAiKey() {
+        return aiKey;
+    }
+    public void setAiKey(String aiKey) {
+        this.aiKey = aiKey;
     }
 
     public Queue<Object> getMessageQueue() {
@@ -185,7 +196,7 @@ public class ServerThread extends Thread {
                     ai = message.getConnect().isAI();
                     System.out.println(name + " connected against " + opponent);
                     DBGServer.joinQueue(this);
-                    connected = true;
+                    if (!(ai && opponent == null)) connected = true;
                     break;
                 }
             }
