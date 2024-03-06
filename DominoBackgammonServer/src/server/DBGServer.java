@@ -24,7 +24,7 @@ public class DBGServer {
 
     private static Socket controllerSocket;
     private static PrintWriter controllerOut;
-    private static final String CONTROLLER_ADDRESS = "127.0.0.1";
+    private static final String CONTROLLER_ADDRESS = "10.0.0.134";
     private static final int CONTROLLER_PORT = 8082;
 
     public static void main(String[] args) {
