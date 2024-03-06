@@ -20,7 +20,7 @@ import java.util.*;
 
 public class AIClientThread extends Thread {
     private final static int PORT = 8081;
-    private final static String SERVER_ADDRESS = "127.0.0.1";
+    private final static String SERVER_ADDRESS = "10.0.0.245";
 
     private final ProtocolMapper protocolMapper;
 
