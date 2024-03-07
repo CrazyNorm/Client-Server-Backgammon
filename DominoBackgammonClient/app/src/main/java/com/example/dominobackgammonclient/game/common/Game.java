@@ -571,22 +571,31 @@ public class Game {
                 // generate board after applying current child's move
                 Board tempBoard = new Board(board);
                 MoveNode move = (MoveNode)child;
-                if (move.getStart() == 25)
+                if (move.getStart() == 25) {
+                    Point endPoint = tempBoard.getPoint(move.getEnd());
+                    if (endPoint.getPlayer() == Player.Opponent && endPoint.isBlot()) {
+                        tempBoard.hitPiece(move.getEnd(), Player.Opponent);
+                    }
                     tempBoard.enterPiece(
                             move.getEnd(),
                             Player.Client
                     );
-                else if (move.getEnd() == 0)
+                } else if (move.getEnd() == 0)
                     tempBoard.bearOffPiece(
                             move.getStart(),
                             Player.Client
                     );
-                else
+                else {
+                    Point endPoint = tempBoard.getPoint(move.getEnd());
+                    if (endPoint.getPlayer() == Player.Opponent && endPoint.isBlot()) {
+                        tempBoard.hitPiece(move.getEnd(), Player.Opponent);
+                    }
                     tempBoard.movePiece(
                             move.getStart(),
                             move.getEnd(),
                             Player.Client
                     );
+                }
                 // expand the child with the new board state
                 expandNode(child, domino, tempBoard);
             }
