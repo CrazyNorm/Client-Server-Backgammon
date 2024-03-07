@@ -114,6 +114,14 @@ public class Game {
         return currentPlayer;
     }
 
+    public void setCurrentPlayer(Player player) {
+        this.currentPlayer = player;
+    }
+
+    public void setTurnCount(int turnCount) {
+        this.turnCount = turnCount;
+    }
+
     public List<Integer> getHighlightedMoves() {
         return highlightedMoves;
     }

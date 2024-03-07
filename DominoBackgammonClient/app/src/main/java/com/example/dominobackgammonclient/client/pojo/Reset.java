@@ -1,5 +1,6 @@
 package com.example.dominobackgammonclient.client.pojo;
 
+import com.example.dominobackgammonclient.game.common.Player;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -9,6 +10,14 @@ import java.util.List;
 
 public class Reset {
 
+    @JacksonXmlProperty(isAttribute = true)
+    private final Player player;
+
+    @JacksonXmlProperty(isAttribute = true)
+    private final int turnCount;
+    @JacksonXmlProperty(isAttribute = true)
+    private final boolean swapped;
+
     @JacksonXmlElementWrapper(useWrapping = false)
     @JacksonXmlProperty(localName = "pieceList")
     private final List<PieceList> pieces;
@@ -17,16 +26,37 @@ public class Reset {
     private final List<HandPojo> hands;
 
 
-    public Reset() {
+    public Reset(Player player, int turnCount, boolean swapped) {
+        this.player = player;
+        this.turnCount = turnCount;
+        this.swapped = swapped;
         this.pieces = new ArrayList<>();
         this.hands = new ArrayList<>();
     }
 
     public Reset(
+            @JsonProperty("player") Player player,
+            @JsonProperty("turnCount") int turnCount,
+            @JsonProperty("swapped") boolean swapped,
             @JsonProperty("pieceList") List<PieceList> pieces,
             @JsonProperty("hand") List<HandPojo> hands) {
+        this.player = player;
+        this.turnCount = turnCount;
+        this.swapped = swapped;
         this.pieces = pieces;
         this.hands = hands;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public int getTurnCount() {
+        return turnCount;
+    }
+
+    public boolean isSwapped() {
+        return swapped;
     }
 
     public List<PieceList> getPieces() {

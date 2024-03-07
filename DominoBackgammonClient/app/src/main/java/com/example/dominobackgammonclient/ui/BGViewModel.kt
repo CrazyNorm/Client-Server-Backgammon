@@ -206,6 +206,10 @@ class BGViewModel : ViewModel() {
     }
 
     fun resetGame(reset: Reset) {
+        // reset game details
+        _gameState.value.currentPlayer = reset.player
+        _gameState.value.setTurnCount(reset.turnCount)
+
         // reset pieces
         val whitePieces = if (reset.pieces[0].colour == PlayerPojo.White) reset.pieces[0]
         else reset.pieces[1]
@@ -217,6 +221,11 @@ class BGViewModel : ViewModel() {
         val whiteHandPojo = if (reset.hands[0].colour == PlayerPojo.White) reset.hands[0]
         else reset.hands[1]
         val whiteHand = Hand(whiteHandPojo.set)
+        if (reset.isSwapped) {
+            // swaps twice to be sure doubles are in the right state
+            whiteHand.swapDominoSet()
+            whiteHand.swapDominoSet()
+        }
         for (dom in whiteHandPojo.dominoes) {
             if (!dom.isAvailable) {
                 if (dom.side1 != dom.side2)
@@ -229,6 +238,11 @@ class BGViewModel : ViewModel() {
         val blackHandPojo = if (reset.hands[0].colour == PlayerPojo.Black) reset.hands[0]
         else reset.hands[1]
         val blackHand = Hand(blackHandPojo.set)
+        if (reset.isSwapped) {
+            // swaps twice to be sure doubles are in the right state
+            blackHand.swapDominoSet()
+            blackHand.swapDominoSet()
+        }
         for (dom in blackHandPojo.dominoes) {
             if (!dom.isAvailable) {
                 if (dom.side1 != dom.side2)
