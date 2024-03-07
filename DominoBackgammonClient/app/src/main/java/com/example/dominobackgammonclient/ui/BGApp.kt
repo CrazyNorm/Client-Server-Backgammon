@@ -28,12 +28,21 @@ fun BGApp(
     // overlays
     if (!uiState.connected)
         ConnectOverlay(
-            onClick = { bgViewModel.sendConnect() },
+            onConnect = { bgViewModel.sendConnect() },
             connectionFailed = uiState.connectionFailed,
             disableButton = uiState.connecting,
             playerName = uiState.playerName,
             placeholderName = uiState.nameDefault,
-            onNameChanged = { name -> bgViewModel.updatePlayerName(name) }
+            onNameChanged = { name -> bgViewModel.updatePlayerName(name) },
+            aiOpponent = uiState.aiOpponent,
+            onOpponentTypeChanged = { ai -> bgViewModel.updateAIOpponent(ai) },
+            opponentName = uiState.opponentName,
+            placeholderOpponent = uiState.opponentDefault,
+            onOpponentChanged = { name -> bgViewModel.updateOpponentName(name) },
+            aiType = uiState.aiType,
+            aiTypeList = uiState.aiTypes,
+            onAITypeChanged = { type -> bgViewModel.updateAIType(type) },
+            rotate = landscape
         )
 
     else if (!uiState.started)

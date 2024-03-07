@@ -57,7 +57,17 @@ class BGViewModel : ViewModel() {
             _uiState.update { currentState ->
                 currentState.copy(playerName = currentState.nameDefault)
             }
-        m.connect = Connect(_uiState.value.playerName, "any")
+
+        // get opponent type
+        val opponent: String
+        if (!_uiState.value.aiOpponent) {
+            opponent = if (_uiState.value.opponentName == "") _uiState.value.opponentDefault
+            else "name:" + _uiState.value.opponentName
+        } else {
+            opponent = "ai:" + _uiState.value.aiDefault
+        }
+
+        m.connect = Connect(_uiState.value.playerName, opponent)
         _client.queueMessage(m)
     }
 
@@ -80,6 +90,31 @@ class BGViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(
                 playerName = newName
+            )
+        }
+    }
+
+    fun updateOpponentName(newName: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                opponentName = newName
+            )
+        }
+    }
+
+    fun updateAIOpponent(isAI: Boolean) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                aiOpponent = isAI
+            )
+        }
+    }
+
+
+    fun updateAIType(type: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                aiType = type
             )
         }
     }
@@ -265,7 +300,10 @@ class BGViewModel : ViewModel() {
         _uiState.update {
             UIState(
                 colourScheme = _uiState.value.colourScheme,
-                playerName = _uiState.value.playerName
+                playerName = _uiState.value.playerName,
+                opponentName = _uiState.value.opponentName,
+                aiType = _uiState.value.aiType,
+                aiOpponent = _uiState.value.aiOpponent
             )
         }
     }

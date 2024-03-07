@@ -9,6 +9,11 @@ data class UIState(
     var playerName: String = "",
     val nameDefault: String = "Player",
     var opponentName: String = "",
+    val opponentDefault: String = "any",
+    var aiOpponent: Boolean = false,
+    var aiType: String = "",
+    val aiTypes: List<String> = listOf("random", "minimax"),
+    val aiDefault: String = "random",
     // waiting for server messages
     var started: Boolean = false,
     var waiting: Boolean = false,
