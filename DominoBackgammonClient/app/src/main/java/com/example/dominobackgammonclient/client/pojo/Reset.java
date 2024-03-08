@@ -1,6 +1,5 @@
 package com.example.dominobackgammonclient.client.pojo;
 
-import com.example.dominobackgammonclient.game.common.Player;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -11,7 +10,7 @@ import java.util.List;
 public class Reset {
 
     @JacksonXmlProperty(isAttribute = true)
-    private final Player player;
+    private final PlayerPojo player;
 
     @JacksonXmlProperty(isAttribute = true)
     private final int turnCount;
@@ -26,7 +25,7 @@ public class Reset {
     private final List<HandPojo> hands;
 
 
-    public Reset(Player player, int turnCount, boolean swapped) {
+    public Reset(PlayerPojo player, int turnCount, boolean swapped) {
         this.player = player;
         this.turnCount = turnCount;
         this.swapped = swapped;
@@ -35,7 +34,7 @@ public class Reset {
     }
 
     public Reset(
-            @JsonProperty("player") Player player,
+            @JsonProperty("player") PlayerPojo player,
             @JsonProperty("turnCount") int turnCount,
             @JsonProperty("swapped") boolean swapped,
             @JsonProperty("pieceList") List<PieceList> pieces,
@@ -47,7 +46,7 @@ public class Reset {
         this.hands = hands;
     }
 
-    public Player getPlayer() {
+    public PlayerPojo getPlayer() {
         return player;
     }
 

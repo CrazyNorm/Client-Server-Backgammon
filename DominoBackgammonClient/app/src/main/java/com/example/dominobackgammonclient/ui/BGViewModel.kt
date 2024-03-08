@@ -195,8 +195,9 @@ class BGViewModel : ViewModel() {
         }
 
         // apply moves to server board
-        for (move in turn.moves)
-            _gameState.value.makeServerMove(move.start, move.end, player)
+        if (turn.moves != null)
+            for (move in turn.moves)
+                _gameState.value.makeServerMove(move.start, move.end, player)
     }
 
 
@@ -207,7 +208,9 @@ class BGViewModel : ViewModel() {
 
     fun resetGame(reset: Reset) {
         // reset game details
-        _gameState.value.currentPlayer = reset.player
+        val colour = if (reset.player == PlayerPojo.White) BGColour.WHITE else BGColour.BLACK
+        _gameState.value.currentPlayer =
+            if (colour == _gameState.value.getColour(Player.Client)) Player.Client else Player.Opponent
         _gameState.value.setTurnCount(reset.turnCount)
 
         // reset pieces

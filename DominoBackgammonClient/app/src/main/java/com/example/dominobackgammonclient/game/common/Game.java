@@ -254,6 +254,8 @@ public class Game {
     public void makeServerMove(int start, int end, Player player) {
         // makes a move according to server instruction
 
+        if (start == 0 || end == 25) return;
+
         // flip for opponent moves
         if (player == Player.Opponent) {
             if (start < 25) start = 25 - start;
