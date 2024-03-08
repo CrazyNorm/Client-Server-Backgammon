@@ -4,10 +4,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.dominobackgammonclient.ui.common.BGColour
@@ -21,7 +21,7 @@ fun Bar(
     modifier: Modifier = Modifier,
     highlightClient: Boolean = false
 ) {
-    val cMod = if (highlightClient) Modifier.border(5.dp, Color.Green) else Modifier
+    val cMod = if (highlightClient) Modifier.border(5.dp, MaterialTheme.colorScheme.tertiary) else Modifier
     Column(modifier) {
         Box(Modifier.weight(1f)) {
             if (client.count == 1) {
