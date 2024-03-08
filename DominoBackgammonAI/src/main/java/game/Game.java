@@ -98,13 +98,15 @@ public class Game {
             // remove extra doubles
             if (game.swapped) {
                 if (h.getColour() == Player.White) {
-                    if (game.points[2] == -1) game.points[5] = 0;
-                    if (game.points[0] == -1) game.points[2] = 0;
+                    if (game.dominoes[2] == -1) game.dominoes[5] = 0;
+                    if (game.dominoes[0] == -1) game.dominoes[2] = 0;
                 } else {
-                    if (game.points[3] == -1) game.points[4] = 0;
-                    if (game.points[1] == -1) game.points[3] = 0;
+                    if (game.dominoes[3] == 1) game.dominoes[4] = 0;
+                    if (game.dominoes[1] == 1) game.dominoes[3] = 0;
                 }
             }
+            else
+                for (int i = 0; i < 6; i++) game.dominoes[i] = 0;
         }
 
         return game;
@@ -146,6 +148,25 @@ public class Game {
     public void nextTurn() {
         player *= -1;
         turnCount++;
+
+        // check for swapping domino sets
+        boolean swap = true;
+        for (int i = 6; i < dominoes.length; i++) {
+            if (dominoes[i] != 0) {
+                swap = false;
+                break;
+            }
+        }
+        if (swap) {
+            for (byte ind: dominoSets[whiteSet - 1]) dominoes[ind] = -1;
+            whiteSet = (byte) (3 - whiteSet); // 3 - x swaps x between 1 & 2
+            for (byte ind: dominoSets[whiteSet - 1]) dominoes[ind] = 1;
+            if (!swapped) {
+                swapped = true;
+                dominoes[0] = -1;
+                dominoes[1] = 1;
+            }
+        }
     }
 
     public byte getWhiteSet() {
@@ -177,9 +198,16 @@ public class Game {
         return (dominoes[index] == player);
     }
 
-    public byte[] getDomino(int index) {
+    public static byte[] getDomino(int index) {
         // returns the value of the domino at the given index
         return dominoList[index];
+    }
+
+    public static int getDominoIndex(byte[] domino) {
+        // finds the index for a given domino value
+        for (int i = 0; i < dominoList.length; i++)
+            if (dominoList[i] == domino) return i;
+        return -1;
     }
 
     public List<byte[]> getAvailableDominoes(byte player) {
@@ -217,25 +245,12 @@ public class Game {
                     dominoes[4] = player;
                     break;
             }
+    }
 
-        // checks for swapping domino sets
-        boolean swap = true;
-        for (int i = 6; i < dominoes.length; i++) {
-            if (dominoes[i] != 0) {
-                swap = false;
-                break;
-            }
-        }
-        if (swap) {
-            for (byte ind: dominoSets[whiteSet - 1]) dominoes[ind] = -1;
-            whiteSet = (byte) (3 - whiteSet); // 3 - x swaps x between 1 & 2
-            for (byte ind: dominoSets[whiteSet - 1]) dominoes[ind] = 1;
-            if (!swapped) {
-                swapped = true;
-                dominoes[0] = -1;
-                dominoes[1] = 1;
-            }
-        }
+    public void useDomino(byte[] domino) {
+        // uses the domino with the given value
+        int index = Game.getDominoIndex(domino);
+        useDomino(index);
     }
 
 
