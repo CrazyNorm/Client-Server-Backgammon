@@ -105,12 +105,12 @@ public class Game {
         for (int ind: indices) {
             if (player == 1 && ind != 0 && ind != 25) ind = 25 - ind;
             if (ind == 0) {
-                if (player == 1) off[0] += player;
-                else off[1] += player;
+                if (player == 1) off[0]++;
+                else off[1]++;
             }
             else if (ind == 25) {
-                if (player == 1) bar[0] += player;
-                else bar[1] += player;
+                if (player == 1) bar[0]++;
+                else bar[1]++;
             }
             else points[ind - 1] += player;
         }
