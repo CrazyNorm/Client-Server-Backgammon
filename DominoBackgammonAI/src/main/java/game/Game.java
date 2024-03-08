@@ -244,6 +244,12 @@ public class Game {
         return points[index - 1];
     }
 
+    public byte checkBar(byte player) {
+        // returns the number of pieces on the bar for the given player
+        if (player == 1) return bar[0];
+        return bar[1];
+    }
+
     public void movePiece(int start, int end) {
         // moves a piece from start to end for the current player
         // assumes validity is already checked
