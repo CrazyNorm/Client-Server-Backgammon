@@ -95,6 +95,16 @@ public class Game {
                 if (dom.getSide1() == dom.getSide2() && !reset.isSwapped()) continue;
                 if (dom.isAvailable()) game.addDomino(dom.getSide1(), dom.getSide2(), handPlayer);
             }
+            // remove extra doubles
+            if (game.swapped) {
+                if (h.getColour() == Player.White) {
+                    if (game.points[2] == -1) game.points[5] = 0;
+                    if (game.points[0] == -1) game.points[2] = 0;
+                } else {
+                    if (game.points[3] == -1) game.points[4] = 0;
+                    if (game.points[1] == -1) game.points[3] = 0;
+                }
+            }
         }
 
         return game;
