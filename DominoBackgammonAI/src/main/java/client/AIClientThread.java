@@ -108,7 +108,10 @@ public class AIClientThread extends Thread {
                         boolean validTurn = false;
                         while (!validTurn) {
                             Message turn = new Message(newIdemToken());
+
+                            long start = System.currentTimeMillis();
                             turn.setTurn(aiProfile.chooseTurn(game));
+                            System.out.println(System.currentTimeMillis() - start);
 
                             String xml = protocolMapper.serialize(turn);
                             messageLog.put(m.getIdempotencyKey(), xml);
