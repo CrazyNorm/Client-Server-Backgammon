@@ -11,6 +11,8 @@ import java.util.Random;
 
 public class MinimaxAI extends AI {
 
+    private byte colour; // colour of the AI player
+
     private final Heuristic heuristic;
     private final int targetDepth; // how deep to search before evaluating with heuristic
     private final int searchTimeout; // timeout to give up search and just return best so far
@@ -19,13 +21,15 @@ public class MinimaxAI extends AI {
 
     public MinimaxAI(String type) {
         this.heuristic = HeuristicFactory.getHeuristic(type);
-        this.targetDepth = 3;
+        this.targetDepth = 4;
         this.searchTimeout = 10000;
     }
 
     @Override
     public TurnPojo chooseTurn(Game game) {
         // perform minimax search to choose domino(es) and moves
+        this.colour = game.getPlayer();
+
         byte[][] chosenTurn = minimaxSearch(game, targetDepth);
 
         // build pojo for the chosen turn
@@ -54,11 +58,11 @@ public class MinimaxAI extends AI {
         byte[] bestMoveSeq = new byte[0];
         double bestVal = Double.NEGATIVE_INFINITY * game.getPlayer();
 
-        double alpha = Double.NEGATIVE_INFINITY;
-        double beta = Double.POSITIVE_INFINITY;
-
         // perform search for each domino choice then take the "best of the best"
         for (byte[] dom: game.getAvailableDominoes(game.getPlayer())) {
+            double alpha = Double.NEGATIVE_INFINITY;
+            double beta = Double.POSITIVE_INFINITY;
+
             // ignores the double for now
             if (dom[0] == dom[1]) continue;
 
@@ -70,7 +74,7 @@ public class MinimaxAI extends AI {
                 byte[] maxMove = null;
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
-                    if (alpha > beta) break;
+                    if (alpha >= beta) break;
 
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
@@ -115,7 +119,7 @@ public class MinimaxAI extends AI {
                 byte[] minMove = null;
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
-                    if (alpha > beta) break;
+                    if (alpha >= beta) break;
 
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
@@ -169,6 +173,9 @@ public class MinimaxAI extends AI {
 
             // try evaluating with each possible "substitute" domino
             for (byte[] dom: game.getAvailableDominoes(game.getPlayer())) {
+                double alpha = Double.NEGATIVE_INFINITY;
+                double beta = Double.POSITIVE_INFINITY;
+
                 if (dom[0] == dom[1]) continue;
 
                 // maximising (black)
@@ -176,7 +183,7 @@ public class MinimaxAI extends AI {
                     byte[] maxMove = null;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
-                        if (alpha > beta) break;
+                        if (alpha >= beta) break;
 
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
@@ -223,7 +230,7 @@ public class MinimaxAI extends AI {
                     byte[] minMove = null;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
-                        if (alpha > beta) break;
+                        if (alpha >= beta) break;
 
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
@@ -279,7 +286,7 @@ public class MinimaxAI extends AI {
         if (game.checkWin() == -1) return Double.NEGATIVE_INFINITY;
 
         // use heuristic at set depth
-        if (depth == 0) return heuristic.evaluate(game);
+        if (depth == 0) return heuristic.evaluate(game, colour);
 
 
         // best choice so far
@@ -298,7 +305,7 @@ public class MinimaxAI extends AI {
                 alpha = Double.NEGATIVE_INFINITY; // maximise alpha
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
-                    if (alpha > beta) break;
+                    if (alpha >= beta) break;
 
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
@@ -327,7 +334,7 @@ public class MinimaxAI extends AI {
                 beta = Double.POSITIVE_INFINITY; // minimise beta
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
-                    if (alpha > beta) break;
+                    if (alpha >= beta) break;
 
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
@@ -372,7 +379,7 @@ public class MinimaxAI extends AI {
                     alpha = Double.NEGATIVE_INFINITY;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
-                        if (alpha > beta) break;
+                        if (alpha >= beta) break;
 
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
@@ -403,7 +410,7 @@ public class MinimaxAI extends AI {
                     beta = Double.POSITIVE_INFINITY;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
-                        if (alpha > beta) break;
+                        if (alpha >= beta) break;
 
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
