@@ -177,7 +177,7 @@ public class ServerThread extends Thread {
                 else if (!message.isConnect()) r.setDeny(new Deny("Connect first"));
                 else if (message.getConnect().getOpponentType().startsWith("ai:")){
                     String opponentType = message.getConnect().getOpponentType();
-                    if (!opponentType.matches("^ai:(random|(minimax|mcts)-[1-5])$"))
+                    if (!opponentType.matches("^ai:(random|(minimax-(aggressive|defensive))|(mcts-[1-5]))$"))
                         r.setDeny(new Deny("Invalid AI config"));
                     else if (!DBGServer.isAIAvailable()) r.setDeny(new Deny("AI unavailable"));
                     else r.setApprove(new Approve());
