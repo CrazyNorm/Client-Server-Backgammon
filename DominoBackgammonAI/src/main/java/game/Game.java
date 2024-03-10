@@ -265,6 +265,13 @@ public class Game {
         return bar[1];
     }
 
+    public byte checkWin() {
+        // returns if either player has won (0 if neither)
+        if (off[0] == 15) return 1;
+        else if (off[1] == 15) return -1;
+        return 0;
+    }
+
     public void movePiece(int start, int end) {
         // moves a piece from start to end for the current player
         // assumes validity is already checked

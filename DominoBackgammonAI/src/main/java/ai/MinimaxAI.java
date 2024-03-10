@@ -19,7 +19,7 @@ public class MinimaxAI extends AI {
 
     public MinimaxAI(String type) {
         this.heuristic = HeuristicFactory.getHeuristic(type);
-        this.targetDepth = 2;
+        this.targetDepth = 3;
         this.searchTimeout = 10000;
     }
 
@@ -54,6 +54,9 @@ public class MinimaxAI extends AI {
         byte[] bestMoveSeq = new byte[0];
         double bestVal = Double.NEGATIVE_INFINITY * game.getPlayer();
 
+        double alpha = Double.NEGATIVE_INFINITY;
+        double beta = Double.POSITIVE_INFINITY;
+
         // perform search for each domino choice then take the "best of the best"
         for (byte[] dom: game.getAvailableDominoes(game.getPlayer())) {
             // ignores the double for now
@@ -64,20 +67,21 @@ public class MinimaxAI extends AI {
 
             // maximising (black)
             if (game.getPlayer() == 1) {
-                double maxVal = Double.NEGATIVE_INFINITY;
                 byte[] maxMove = null;
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
+                    if (alpha > beta) break;
+
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
                     for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                     tempGame.nextTurn();
 
-                    double moveVal = minimaxEval(tempGame, depth - 1);
-                    if (moveVal > maxVal ||
-                            (moveVal == maxVal && RAND.nextInt(100) % 3 == 0)
+                    double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    if (moveVal > alpha ||
+                            (moveVal == alpha && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        maxVal = moveVal;
+                        alpha = moveVal;
                         maxMove = m;
                     }
                 }
@@ -87,20 +91,20 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1);
-                    if (domVal > maxVal ||
-                            (domVal == maxVal && RAND.nextInt(100) % 3 == 0)
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    if (domVal > alpha ||
+                            (domVal == alpha && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        maxVal = domVal;
+                        alpha = domVal;
                         maxMove = new byte[0];
                     }
                 }
 
                 // checks if best move for this domino is best move so far for the turn
-                if (maxVal > bestVal ||
-                        (maxVal == bestVal && RAND.nextInt(100) % 3 == 0)
+                if (alpha > bestVal ||
+                        (alpha == bestVal && RAND.nextInt(100) % 3 == 0)
                 ) {
-                    bestVal = maxVal;
+                    bestVal = alpha;
                     bestDomino = dom;
                     bestMoveSeq = maxMove;
                 }
@@ -108,20 +112,21 @@ public class MinimaxAI extends AI {
 
             // minimising (white)
             else if (game.getPlayer() == -1) {
-                double minVal = Double.POSITIVE_INFINITY;
                 byte[] minMove = null;
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
+                    if (alpha > beta) break;
+
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
                     for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                     tempGame.nextTurn();
 
-                    double moveVal = minimaxEval(tempGame, depth - 1);
-                    if (moveVal < minVal ||
-                            (moveVal == minVal && RAND.nextInt(100) % 3 == 0)
+                    double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    if (moveVal < beta ||
+                            (moveVal == beta && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        minVal = moveVal;
+                        beta = moveVal;
                         minMove = m;
                     }
                 }
@@ -131,20 +136,20 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1);
-                    if (domVal > minVal ||
-                            (domVal == minVal && RAND.nextInt(100) % 3 == 0)
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    if (domVal > beta ||
+                            (domVal == beta && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        minVal = domVal;
+                        beta = domVal;
                         minMove = new byte[0];
                     }
                 }
 
                 // checks if best move for this domino is best move so far for the turn
-                if (minVal < bestVal ||
-                        (minVal == bestVal && RAND.nextInt(100) % 3 == 0)
+                if (beta < bestVal ||
+                        (beta == bestVal && RAND.nextInt(100) % 3 == 0)
                 ) {
-                    bestVal = minVal;
+                    bestVal = beta;
                     bestDomino = dom;
                     bestMoveSeq = minMove;
                 }
@@ -168,21 +173,22 @@ public class MinimaxAI extends AI {
 
                 // maximising (black)
                 if (game.getPlayer() == 1) {
-                    double maxVal = Double.NEGATIVE_INFINITY;
                     byte[] maxMove = null;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
+                        if (alpha > beta) break;
+
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
                         tempGame.useDomino(dbl);
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1);
-                        if (moveVal > maxVal ||
-                                (moveVal == maxVal && RAND.nextInt(100) % 3 == 0)
+                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        if (moveVal > alpha ||
+                                (moveVal == alpha && RAND.nextInt(100) % 3 == 0)
                         ) {
-                            maxVal = moveVal;
+                            alpha = moveVal;
                             maxMove = m;
                         }
                     }
@@ -193,20 +199,20 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1);
-                        if (domVal > maxVal ||
-                                (domVal == maxVal && RAND.nextInt(100) % 3 == 0)
+                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        if (domVal > alpha ||
+                                (domVal == alpha && RAND.nextInt(100) % 3 == 0)
                         ) {
-                            maxVal = domVal;
+                            alpha = domVal;
                             maxMove = new byte[0];
                         }
                     }
 
                     // checks if best move for this domino + double is best move so far for the turn
-                    if (maxVal > bestVal ||
-                            (maxVal == bestVal && RAND.nextInt(100) % 3 == 0)
+                    if (alpha > bestVal ||
+                            (alpha == bestVal && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        bestVal = maxVal;
+                        bestVal = alpha;
                         bestDomino = new byte[] {dbl[0], dbl[1], dom[0], dom[1]};
                         bestMoveSeq = maxMove;
                     }
@@ -214,21 +220,22 @@ public class MinimaxAI extends AI {
 
                 // minimising (white)
                 else if (game.getPlayer() == -1) {
-                    double minVal = Double.POSITIVE_INFINITY;
                     byte[] minMove = null;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
+                        if (alpha > beta) break;
+
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
                         tempGame.useDomino(dbl);
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1);
-                        if (moveVal < minVal ||
-                                (moveVal == minVal && RAND.nextInt(100) % 3 == 0)
+                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        if (moveVal < beta ||
+                                (moveVal == beta && RAND.nextInt(100) % 3 == 0)
                         ) {
-                            minVal = moveVal;
+                            beta = moveVal;
                             minMove = m;
                         }
                     }
@@ -239,20 +246,20 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1);
-                        if (domVal > minVal ||
-                                (domVal == minVal && RAND.nextInt(100) % 3 == 0)
+                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        if (domVal > beta ||
+                                (domVal == beta && RAND.nextInt(100) % 3 == 0)
                         ) {
-                            minVal = domVal;
+                            beta = domVal;
                             minMove = new byte[0];
                         }
                     }
 
                     // checks if best move for this domino + double is best move so far for the turn
-                    if (minVal < bestVal ||
-                            (minVal == bestVal && RAND.nextInt(100) % 3 == 0)
+                    if (beta < bestVal ||
+                            (beta == bestVal && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        bestVal = minVal;
+                        bestVal = beta;
                         bestDomino = new byte[] {dbl[0], dbl[1], dom[0], dom[1]};
                         bestMoveSeq = minMove;
                     }
@@ -264,8 +271,12 @@ public class MinimaxAI extends AI {
     }
 
 
-    public double minimaxEval(Game game, int depth) {
+    public double minimaxEval(Game game, int depth, double alpha, double beta) {
         // recursively performs minimax evaluation, with a heuristic evaluation at a given depth
+
+        // check for wins
+        if (game.checkWin() == 1) return Double.POSITIVE_INFINITY;
+        if (game.checkWin() == -1) return Double.NEGATIVE_INFINITY;
 
         // use heuristic at set depth
         if (depth == 0) return heuristic.evaluate(game);
@@ -284,16 +295,18 @@ public class MinimaxAI extends AI {
 
             // maximising (black)
             if (game.getPlayer() == 1) {
-                double maxVal = Double.NEGATIVE_INFINITY;
+                alpha = Double.NEGATIVE_INFINITY; // maximise alpha
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
+                    if (alpha > beta) break;
+
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
                     for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                     tempGame.nextTurn();
 
-                    double moveVal = minimaxEval(tempGame, depth - 1);
-                    maxVal = Math.max(maxVal, moveVal);
+                    double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    alpha = Math.max(alpha, moveVal);
                 }
                 // checks value of using domino without moving
                 if (moves.isEmpty()) {
@@ -301,26 +314,28 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1);
-                    maxVal = Math.max(maxVal, domVal);
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    alpha = Math.max(alpha, domVal);
                 }
 
                 // checks if best move for this domino is best move so far for the turn
-                bestVal = Math.max(maxVal, bestVal);
+                bestVal = Math.max(alpha, bestVal);
             }
 
             // minimising (white)
             else if (game.getPlayer() == -1) {
-                double minVal = Double.POSITIVE_INFINITY;
+                beta = Double.POSITIVE_INFINITY; // minimise beta
                 // checks value of each possible move sequence
                 for (byte[] m: moves) {
+                    if (alpha > beta) break;
+
                     Game tempGame = new Game(game);
                     tempGame.useDomino(dom);
                     for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                     tempGame.nextTurn();
 
-                    double moveVal = minimaxEval(tempGame, depth - 1);
-                    minVal = Math.min(minVal, moveVal);
+                    double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    beta = Math.min(beta, moveVal);
                 }
                 // checks value of using domino without moving
                 if (moves.isEmpty()) {
@@ -328,12 +343,12 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1);
-                    minVal = Math.min(minVal, domVal);
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    beta = Math.min(beta, domVal);
                 }
 
                 // checks if best move for this domino is best move so far for the turn
-                bestVal = Math.min(minVal, bestVal);
+                bestVal = Math.min(beta, bestVal);
             }
         }
 
@@ -354,17 +369,19 @@ public class MinimaxAI extends AI {
 
                 // maximising (black)
                 if (game.getPlayer() == 1) {
-                    double maxVal = Double.NEGATIVE_INFINITY;
+                    alpha = Double.NEGATIVE_INFINITY;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
+                        if (alpha > beta) break;
+
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
                         tempGame.useDomino(dbl);
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1);
-                        maxVal = Math.max(maxVal, moveVal);
+                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        alpha = Math.max(alpha, moveVal);
                     }
                     // checks value of using domino + double without moving
                     if (moves.isEmpty()) {
@@ -373,27 +390,29 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1);
-                        maxVal = Math.max(maxVal, domVal);
+                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        alpha = Math.max(alpha, domVal);
                     }
 
                     // checks if best move for this domino + double is best move so far for the turn
-                    bestVal = Math.max(maxVal, bestVal);
+                    bestVal = Math.max(alpha, bestVal);
                 }
 
                 // minimising (white)
                 else if (game.getPlayer() == -1) {
-                    double minVal = Double.POSITIVE_INFINITY;
+                    beta = Double.POSITIVE_INFINITY;
                     // checks value of each possible move sequence
                     for (byte[] m: moves) {
+                        if (alpha > beta) break;
+
                         Game tempGame = new Game(game);
                         tempGame.useDomino(dom);
                         tempGame.useDomino(dbl);
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1);
-                        minVal = Math.min(minVal, moveVal);
+                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        beta = Math.min(beta, moveVal);
                     }
                     // checks value of using domino + double without moving
                     if (moves.isEmpty()) {
@@ -402,12 +421,12 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1);
-                        minVal = Math.min(minVal, domVal);
+                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        beta = Math.min(beta, domVal);
                     }
 
                     // checks if best move for this domino + double is best move so far for the turn
-                    bestVal = Math.min(minVal, bestVal);
+                    bestVal = Math.min(beta, bestVal);
                 }
             }
         }
