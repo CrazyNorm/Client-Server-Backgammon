@@ -6,7 +6,7 @@ public class DefensiveHeuristic extends Heuristic {
     private static final double hitWeight = -3;
     private static final double reachableBlotWeight = -3;
     private static final double unreachableBlotWeight = -1;
-    private static final double pipCountWeight = -1;
+    private static final double pipCountWeight = -0.5;
 
     @Override
     public double evaluate(Game game, byte player) {
