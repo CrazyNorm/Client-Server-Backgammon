@@ -9,6 +9,8 @@ public abstract class Heuristic {
 
 
 
+    // features:
+
     protected int getBlockedPoints(Game game, byte player) {
         int blocked = 0;
         for (int i = 1; i < 25; i++)
