@@ -51,22 +51,22 @@ public abstract class Heuristic {
                     if (dom[0] == dom[1]) {
                         reachable = true;
                         int ind = i + dom[0] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         ind += dom[0] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         ind += dom[0] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         ind += dom[0] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         reachable = false;
                     } else {
                         reachable = true;
                         int ind = i + dom[0] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         ind = i + dom[1] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         ind += dom[0] * opponent;
-                        if (game.checkPoint(ind) * player > 0) break;
+                        if (ind > 0 && ind < 25 && game.checkPoint(ind) * player > 0) break;
                         reachable = false;
                     }
                 }
