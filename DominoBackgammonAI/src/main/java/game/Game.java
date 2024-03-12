@@ -198,6 +198,11 @@ public class Game {
         return (dominoes[index] == player);
     }
 
+    public boolean checkDomino(int index, byte player) {
+        // checks if domino at given index is available for the given player
+        return (dominoes[index] == player);
+    }
+
     public static byte[] getDomino(int index) {
         // returns the value of the domino at the given index
         return dominoList[index];
@@ -265,6 +270,12 @@ public class Game {
         return bar[1];
     }
 
+    public byte checkBorneOff(byte player) {
+        // returns the number of pieces borne off for the given player
+        if (player == 1) return off[0];
+        return off[1];
+    }
+
     public byte checkWin() {
         // returns if either player has won (0 if neither)
         if (off[0] == 15) return 1;
@@ -297,6 +308,16 @@ public class Game {
             }
             points[end-1] += player;
         }
+    }
+
+
+    public int getPipCount(byte player) {
+        int pipCount = 0;
+        if (player == 1) pipCount += bar[0] * 25;
+        else pipCount += bar[1] * 25;
+        for (int i = 0; i < points.length; i++)
+            if (points[i] * player > 0) pipCount += i * points[i] * player;
+        return pipCount;
     }
 
 
