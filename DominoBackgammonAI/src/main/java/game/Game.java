@@ -316,7 +316,11 @@ public class Game {
         if (player == 1) pipCount += bar[0] * 25;
         else pipCount += bar[1] * 25;
         for (int i = 0; i < points.length; i++)
-            if (points[i] * player > 0) pipCount += i * points[i] * player;
+            if (player == 1) {
+                if (points[i] > 0) pipCount += (24 - i) * points[i];
+            } else {
+                if (points[i] < 0) pipCount += (i + 1) * points[i];
+            }
         return pipCount;
     }
 
