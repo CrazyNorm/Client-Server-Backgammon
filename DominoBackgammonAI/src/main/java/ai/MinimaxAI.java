@@ -191,7 +191,8 @@ public class MinimaxAI extends AI {
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         if (moveVal > alpha ||
                                 (moveVal == alpha && RAND.nextInt(100) % 3 == 0)
                         ) {
@@ -206,7 +207,8 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         if (domVal > alpha ||
                                 (domVal == alpha && RAND.nextInt(100) % 3 == 0)
                         ) {
@@ -238,7 +240,8 @@ public class MinimaxAI extends AI {
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         if (moveVal < beta ||
                                 (moveVal == beta && RAND.nextInt(100) % 3 == 0)
                         ) {
@@ -253,7 +256,8 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         if (domVal > beta ||
                                 (domVal == beta && RAND.nextInt(100) % 3 == 0)
                         ) {
@@ -286,7 +290,7 @@ public class MinimaxAI extends AI {
         if (game.checkWin() == -1) return Double.NEGATIVE_INFINITY;
 
         // use heuristic at set depth
-        if (depth == 0) return heuristic.evaluate(game, colour);
+        if (depth <= 0) return heuristic.evaluate(game, colour);
 
 
         // best choice so far
@@ -387,7 +391,8 @@ public class MinimaxAI extends AI {
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         alpha = Math.max(alpha, moveVal);
                     }
                     // checks value of using domino + double without moving
@@ -397,7 +402,8 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         alpha = Math.max(alpha, domVal);
                     }
 
@@ -418,7 +424,8 @@ public class MinimaxAI extends AI {
                         for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
                         tempGame.nextTurn();
 
-                        double moveVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         beta = Math.min(beta, moveVal);
                     }
                     // checks value of using domino + double without moving
@@ -428,7 +435,8 @@ public class MinimaxAI extends AI {
                         tempGame.useDomino(dbl);
                         tempGame.nextTurn();
 
-                        double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                        // reduce search depth by 1 when doubles are used
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
                         beta = Math.min(beta, domVal);
                     }
 
