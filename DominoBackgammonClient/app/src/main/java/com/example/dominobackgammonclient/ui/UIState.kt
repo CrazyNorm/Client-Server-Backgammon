@@ -12,7 +12,7 @@ data class UIState(
     val opponentDefault: String = "any",
     var aiOpponent: Boolean = false,
     var aiType: String = "",
-    val aiTypes: List<String> = listOf("random", "minimax"),
+    val aiTypes: List<String> = listOf("random", "minimax-aggressive", "minimax-defensive"),
     val aiDefault: String = "random",
     // waiting for server messages
     var started: Boolean = false,

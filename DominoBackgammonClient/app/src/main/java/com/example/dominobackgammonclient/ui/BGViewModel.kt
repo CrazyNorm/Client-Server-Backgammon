@@ -64,7 +64,8 @@ class BGViewModel : ViewModel() {
             opponent = if (_uiState.value.opponentName == "") _uiState.value.opponentDefault
             else "name:" + _uiState.value.opponentName
         } else {
-            opponent = "ai:" + _uiState.value.aiDefault
+            opponent = if (_uiState.value.aiType == "") "ai:" + _uiState.value.aiDefault
+            else "ai:" + _uiState.value.aiType
         }
 
         m.connect = Connect(_uiState.value.playerName, opponent)
