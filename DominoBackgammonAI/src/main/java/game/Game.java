@@ -473,9 +473,14 @@ public class Game {
             // find bearing off moves
             if (player == 1 && furthestPoint > 18) {
                 for (int i = 19; i < 25; i++) {
+                    // skip if point has none of the correct player's pieces
+                    if (points[i-1] * player < 1) continue;
+
+                    // exact bear off
                     if (i + dist == 25) moves.add(
                             new byte[] {(byte) i, 0}
                     );
+                    // bear off highest
                     else if (i + dist > 25 && i == furthestPoint) moves.add(
                             new byte[] {(byte) i, 0}
                     );
