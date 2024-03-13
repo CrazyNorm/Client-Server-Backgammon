@@ -17,11 +17,13 @@ public class MinimaxAI extends AI {
     private final int targetDepth; // how deep to search before evaluating with heuristic
     private final int searchTimeout; // timeout to give up search and just return best so far
 
+    private final static double unusedDominoPenalty = -5;
+
     private final Random RAND = new Random();
 
     public MinimaxAI(String type) {
         this.heuristic = HeuristicFactory.getHeuristic(type);
-        this.targetDepth = 4;
+        this.targetDepth = 3;
         this.searchTimeout = 10000;
     }
 
@@ -95,7 +97,7 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta) + unusedDominoPenalty;
                     if (domVal > alpha ||
                             (domVal == alpha && RAND.nextInt(100) % 3 == 0)
                     ) {
@@ -140,7 +142,7 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta) + unusedDominoPenalty;
                     if (domVal > beta ||
                             (domVal == beta && RAND.nextInt(100) % 3 == 0)
                     ) {
@@ -208,7 +210,7 @@ public class MinimaxAI extends AI {
                         tempGame.nextTurn();
 
                         // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
                         if (domVal > alpha ||
                                 (domVal == alpha && RAND.nextInt(100) % 3 == 0)
                         ) {
@@ -257,7 +259,7 @@ public class MinimaxAI extends AI {
                         tempGame.nextTurn();
 
                         // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
                         if (domVal > beta ||
                                 (domVal == beta && RAND.nextInt(100) % 3 == 0)
                         ) {
@@ -325,7 +327,7 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta) + unusedDominoPenalty;
                     alpha = Math.max(alpha, domVal);
                 }
 
@@ -354,7 +356,7 @@ public class MinimaxAI extends AI {
                     tempGame.useDomino(dom);
                     tempGame.nextTurn();
 
-                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta);
+                    double domVal = minimaxEval(tempGame, depth - 1, alpha, beta) + unusedDominoPenalty;
                     beta = Math.min(beta, domVal);
                 }
 
@@ -403,7 +405,7 @@ public class MinimaxAI extends AI {
                         tempGame.nextTurn();
 
                         // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
                         alpha = Math.max(alpha, domVal);
                     }
 
@@ -436,7 +438,7 @@ public class MinimaxAI extends AI {
                         tempGame.nextTurn();
 
                         // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
                         beta = Math.min(beta, domVal);
                     }
 
