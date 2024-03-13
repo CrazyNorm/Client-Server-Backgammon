@@ -179,4 +179,20 @@ public abstract class Heuristic {
         }
         return pieces;
     }
+
+    protected boolean isBearOff(Game game) {
+        // decides if the game is in a bearOff state (i.e. all pieces have passed all opponent pieces)
+
+        if (game.checkBar((byte) 1) != 0 || game.checkBar((byte) -1) != 0) return false;
+
+        int highestWhite = 0;
+        int lowestBlack = 25;
+        for (int i = 1; i < 25; i++) {
+            byte point = game.checkPoint(i);
+            if (point < 0) highestWhite = Math.max(highestWhite, i);
+            else if (point > 0) lowestBlack = Math.min(lowestBlack, i);
+        }
+
+        return (highestWhite < lowestBlack);
+    }
 }

@@ -8,11 +8,15 @@ public class AggressiveHeuristic extends Heuristic {
     private static final double blockedEntryWeight = 2;
     private static final double blockedPointWeight = 1;
     private static final double pipCountWeight = 1;
+    private static final double borneOffWeight = 0.5;
 
     @Override
     public double evaluate(Game game, byte player) {
         // aggressive heuristic - favours hitting, blocking points & blocking entry
         // also favours higher opponent pip count
+
+        // if in bearoff stage, only care about most borne off
+        if (isBearOff(game)) return game.checkBorneOff(player);
 
         byte opponent = (byte) -player;
 
@@ -24,6 +28,7 @@ public class AggressiveHeuristic extends Heuristic {
         double pipRatio = (double) game.getPipCount(opponent) / 167;
 
         return player * (hitWeight * hitCount + blockedEntryWeight * blockedEntry
-                + blockedPointWeight * blockedPoints + pipCountWeight * pipRatio);
+                + blockedPointWeight * blockedPoints + pipCountWeight * pipRatio
+                + borneOffWeight * game.checkBorneOff(player));
     }
 }
