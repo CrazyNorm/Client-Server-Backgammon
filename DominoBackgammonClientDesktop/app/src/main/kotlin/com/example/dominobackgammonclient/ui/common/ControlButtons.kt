@@ -79,7 +79,9 @@ fun ControlButtonsColumn(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = modifier.padding(horizontal = 10.dp)
+        modifier = modifier
+            .padding(horizontal = 10.dp)
+            .fillMaxWidth()
     ) {
         Button(
             onClick = onSubmit,

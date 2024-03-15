@@ -41,7 +41,7 @@ fun BGApp(
             aiType = uiState.aiType,
             aiTypeList = uiState.aiTypes,
             onAITypeChanged = { type -> bgViewModel.updateAIType(type) },
-            rotate = landscape
+            rotate = false
         )
 
     else if (!uiState.started)
@@ -70,7 +70,6 @@ fun BGApp(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .windowInsetsPadding(WindowInsets.displayCutout)
         )
 
         if (landscape)
@@ -81,7 +80,6 @@ fun BGApp(
                 Modifier
                     .background(MaterialTheme.colorScheme.secondary)
                     .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.displayCutout)
             )
         else
             BGScreenPortrait(
