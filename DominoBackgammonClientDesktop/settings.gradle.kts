@@ -11,3 +11,5 @@ pluginManagement {
 }
 
 rootProject.name = "DominoBackgammonClientDesktop"
+include(":app")
+include(":lib")
