@@ -179,14 +179,19 @@ fun OpponentDetails(
                     }
                 }
             }
-        } else
+        } else {
+            var text by remember { mutableStateOf(opponentName) }
             TextField(
-                value = opponentName,
-                onValueChange = onOpponentChanged,
+                value = text,
+                onValueChange = {
+                    text = it
+                    onOpponentChanged(it)
+                },
                 placeholder = { Text(placeholderOpponent) },
                 label = { Text("Opponent:") },
                 singleLine = true
             )
+        }
     }
 }
 
@@ -207,9 +212,10 @@ fun ConnectDetails(
     ) {
 
         // player name
+        var text by remember { mutableStateOf(playerName) }
         TextField(
-            value = playerName,
-            onValueChange = onNameChanged,
+            value = text,
+            onValueChange = { text = it },
             placeholder = { Text(placeholderName) },
             label = { Text("Your name:") },
             singleLine = true
@@ -223,7 +229,10 @@ fun ConnectDetails(
                 )
 
             Button(
-                onClick = onConnect,
+                onClick = {
+                    onNameChanged(text)
+                    onConnect()
+                },
                 enabled = !disableButton,
                 modifier = Modifier.padding(10.dp)
             ) {

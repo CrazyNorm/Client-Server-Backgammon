@@ -319,7 +319,6 @@ class BGViewModel : AbstractViewModel() {
             UIState(
                 colourScheme = _uiState.value.colourScheme,
                 playerName = _uiState.value.playerName,
-                opponentName = _uiState.value.opponentName,
                 aiType = _uiState.value.aiType,
                 aiOpponent = _uiState.value.aiOpponent
             )
