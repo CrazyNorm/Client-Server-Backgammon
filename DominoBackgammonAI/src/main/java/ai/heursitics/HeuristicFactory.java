@@ -7,7 +7,7 @@ public class HeuristicFactory {
             case "aggressive" -> new AggressiveHeuristic();
             case "defensive" -> new DefensiveHeuristic();
             case "balanced" -> null;  // todo: balance aggression & defence
-            case "joker" -> null;  // todo: focus on annoying the opponent
+            case "annoying" -> new AnnoyingHeuristic();
             default -> null;
         };
     }
