@@ -7,11 +7,14 @@ import client.pojo.Reset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Game {
     // streamlined game representation
     // each game instance uses 52 bytes (plus object overheads?)
     // (plus 36 static bytes)
+
+    private final static Random RAND = new Random();
 
     private final byte[] points;
     private final byte[] bar;  // black, white
@@ -223,6 +226,17 @@ public class Game {
             if (dominoes[i] == player) availableDominoes.add(dominoList[i]);
 
         return availableDominoes;
+    }
+
+    public byte[] getRandomDomino(byte player) {
+        // returns a random available non-double domino to use as a temporary double substitute
+        int randInd = RAND.nextInt(dominoes.length);
+
+        // make sure chosen domino is available to the given player and is non-double
+        while (dominoes[randInd] != player || dominoList[randInd][0] == dominoList[randInd][1])
+            randInd = RAND.nextInt(dominoes.length);
+
+        return dominoList[randInd];
     }
 
     public void useDomino(int index) {

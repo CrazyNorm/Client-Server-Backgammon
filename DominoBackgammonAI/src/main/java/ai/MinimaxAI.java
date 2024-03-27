@@ -172,110 +172,140 @@ public class MinimaxAI extends AI {
         if (dbl != null) {
             // finds all move sequences for the double
             List<byte[]> moves = game.findMoves(dbl);
+            byte[] bestSub = new byte[2];
+            double bestSubVal = Double.NEGATIVE_INFINITY * game.getPlayer();
 
-            // try evaluating with each possible "substitute" domino
-            for (byte[] dom: game.getAvailableDominoes(game.getPlayer())) {
-                double alpha = Double.NEGATIVE_INFINITY;
-                double beta = Double.POSITIVE_INFINITY;
+            // evaluate without a substitute domino, then decide best substitute afterwards
+            double alpha = Double.NEGATIVE_INFINITY;
+            double beta = Double.POSITIVE_INFINITY;
 
-                if (dom[0] == dom[1]) continue;
+            // maximising (black)
+            if (game.getPlayer() == 1) {
+                byte[] maxMove = new byte[0];
+                // checks value of each possible move sequence
+                for (byte[] m: moves) {
+                    if (alpha >= beta) break;
 
-                // maximising (black)
-                if (game.getPlayer() == 1) {
-                    byte[] maxMove = null;
-                    // checks value of each possible move sequence
-                    for (byte[] m: moves) {
-                        if (alpha >= beta) break;
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
+                    tempGame.nextTurn();
 
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
-                        tempGame.nextTurn();
-
-                        // reduce search depth by 1 when doubles are used
-                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
-                        if (moveVal > alpha ||
-                                (moveVal == alpha && RAND.nextInt(100) % 3 == 0)
-                        ) {
-                            alpha = moveVal;
-                            maxMove = m;
-                        }
-                    }
-                    // checks value of using domino + double without moving
-                    if (moves.isEmpty()) {
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        tempGame.nextTurn();
-
-                        // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
-                        if (domVal > alpha ||
-                                (domVal == alpha && RAND.nextInt(100) % 3 == 0)
-                        ) {
-                            alpha = domVal;
-                            maxMove = new byte[0];
-                        }
-                    }
-
-                    // checks if best move for this domino + double is best move so far for the turn
-                    if (alpha > bestVal ||
-                            (alpha == bestVal && RAND.nextInt(100) % 3 == 0)
+                    // reduce search depth by 1 when doubles are used
+                    double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                    if (moveVal > alpha ||
+                            (moveVal == alpha && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        bestVal = alpha;
-                        bestDomino = new byte[] {dbl[0], dbl[1], dom[0], dom[1]};
-                        bestMoveSeq = maxMove;
+                        alpha = moveVal;
+                        maxMove = m;
+                    }
+                }
+                // checks value of using double without moving
+                if (moves.isEmpty()) {
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    tempGame.nextTurn();
+
+                    // reduce search depth by 1 when doubles are used
+                    double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
+                    if (domVal > alpha ||
+                            (domVal == alpha && RAND.nextInt(100) % 3 == 0)
+                    ) {
+                        alpha = domVal;
+                        maxMove = new byte[0];
                     }
                 }
 
-                // minimising (white)
-                else if (game.getPlayer() == -1) {
-                    byte[] minMove = null;
-                    // checks value of each possible move sequence
-                    for (byte[] m: moves) {
-                        if (alpha >= beta) break;
+                // checks for best substitute domino
+                for (byte[] dom : game.getAvailableDominoes(game.getPlayer())) {
+                    if (dom[0] == dom[1]) continue;
 
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
-                        tempGame.nextTurn();
+                    // find heuristic evaluation for best double move with this domino as substitute
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dom);
+                    for (int i = 0; i < maxMove.length; i += 2) tempGame.movePiece(maxMove[i], maxMove[i + 1]);
+                    double val = heuristic.evaluate(tempGame, game.getPlayer());
 
-                        // reduce search depth by 1 when doubles are used
-                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
-                        if (moveVal < beta ||
-                                (moveVal == beta && RAND.nextInt(100) % 3 == 0)
-                        ) {
-                            beta = moveVal;
-                            minMove = m;
-                        }
+                    if (val > bestSubVal) {
+                        bestSubVal = val;
+                        bestSub = dom;
                     }
-                    // checks value of using domino + double without moving
-                    if (moves.isEmpty()) {
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        tempGame.nextTurn();
+                }
 
-                        // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
-                        if (domVal > beta ||
-                                (domVal == beta && RAND.nextInt(100) % 3 == 0)
-                        ) {
-                            beta = domVal;
-                            minMove = new byte[0];
-                        }
-                    }
+                // checks if best double move + best substitute is best move so far for the turn
+                if (alpha > bestVal ||
+                        (alpha == bestVal && RAND.nextInt(100) % 3 == 0)
+                ) {
+                    bestVal = alpha;
+                    bestDomino = new byte[] {dbl[0], dbl[1], bestSub[0], bestSub[1]};
+                    bestMoveSeq = maxMove;
+                }
+            }
 
-                    // checks if best move for this domino + double is best move so far for the turn
-                    if (beta < bestVal ||
-                            (beta == bestVal && RAND.nextInt(100) % 3 == 0)
+            // minimising (white)
+            else if (game.getPlayer() == -1) {
+                byte[] minMove = new byte[0];
+                // checks value of each possible move sequence
+                for (byte[] m: moves) {
+                    if (alpha >= beta) break;
+
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
+                    tempGame.nextTurn();
+
+                    // reduce search depth by 1 when doubles are used
+                    double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                    if (moveVal < beta ||
+                            (moveVal == beta && RAND.nextInt(100) % 3 == 0)
                     ) {
-                        bestVal = beta;
-                        bestDomino = new byte[] {dbl[0], dbl[1], dom[0], dom[1]};
-                        bestMoveSeq = minMove;
+                        beta = moveVal;
+                        minMove = m;
                     }
+                }
+                // checks value of using domino + double without moving
+                if (moves.isEmpty()) {
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    tempGame.nextTurn();
+
+                    // reduce search depth by 1 when doubles are used
+                    double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
+                    if (domVal > beta ||
+                            (domVal == beta && RAND.nextInt(100) % 3 == 0)
+                    ) {
+                        beta = domVal;
+                        minMove = new byte[0];
+                    }
+                }
+
+                // checks for best substitute domino
+                for (byte[] dom : game.getAvailableDominoes(game.getPlayer())) {
+                    if (dom[0] == dom[1]) continue;
+
+                    // find heuristic evaluation for best double move with this domino as substitute
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dom);
+                    for (int i = 0; i < minMove.length; i += 2) tempGame.movePiece(minMove[i], minMove[i + 1]);
+                    double val = heuristic.evaluate(tempGame, game.getPlayer());
+
+                    if (val < bestSubVal) {
+                        bestSubVal = val;
+                        bestSub = dom;
+                    }
+                }
+
+                // checks if best double move + best substitute is best move so far for the turn
+                if (beta < bestVal ||
+                        (beta == bestVal && RAND.nextInt(100) % 3 == 0)
+                ) {
+                    bestVal = beta;
+                    bestDomino = new byte[] {dbl[0], dbl[1], bestSub[0], bestSub[1]};
+                    bestMoveSeq = minMove;
                 }
             }
         }
@@ -375,76 +405,73 @@ public class MinimaxAI extends AI {
         if (dbl != null) {
             // finds all move sequences for the double
             List<byte[]> moves = game.findMoves(dbl);
+            // evaluate without a substitute domino, then decide best substitute afterwards
 
-            // try evaluating with each possible "substitute" domino
-            for (byte[] dom: game.getAvailableDominoes(game.getPlayer())) {
-                if (dom[0] == dom[1]) continue;
 
-                // maximising (black)
-                if (game.getPlayer() == 1) {
-                    alpha = Double.NEGATIVE_INFINITY;
-                    // checks value of each possible move sequence
-                    for (byte[] m: moves) {
-                        if (alpha >= beta) break;
+            // maximising (black)
+            if (game.getPlayer() == 1) {
+                alpha = Double.NEGATIVE_INFINITY;
+                // checks value of each possible move sequence
+                for (byte[] m: moves) {
+                    if (alpha >= beta) break;
 
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
-                        tempGame.nextTurn();
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
+                    tempGame.nextTurn();
 
-                        // reduce search depth by 1 when doubles are used
-                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
-                        alpha = Math.max(alpha, moveVal);
-                    }
-                    // checks value of using domino + double without moving
-                    if (moves.isEmpty()) {
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        tempGame.nextTurn();
+                    // reduce search depth by 1 when doubles are used
+                    double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                    alpha = Math.max(alpha, moveVal);
+                }
+                // checks value of using double without moving
+                if (moves.isEmpty()) {
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    tempGame.nextTurn();
 
-                        // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
-                        alpha = Math.max(alpha, domVal);
-                    }
-
-                    // checks if best move for this domino + double is best move so far for the turn
-                    bestVal = Math.max(alpha, bestVal);
+                    // reduce search depth by 1 when doubles are used
+                    double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
+                    alpha = Math.max(alpha, domVal);
                 }
 
-                // minimising (white)
-                else if (game.getPlayer() == -1) {
-                    beta = Double.POSITIVE_INFINITY;
-                    // checks value of each possible move sequence
-                    for (byte[] m: moves) {
-                        if (alpha >= beta) break;
+                // checks if best move for this domino + double is best move so far for the turn
+                bestVal = Math.max(alpha, bestVal);
+            }
 
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
-                        tempGame.nextTurn();
+            // minimising (white)
+            else if (game.getPlayer() == -1) {
+                beta = Double.POSITIVE_INFINITY;
+                // checks value of each possible move sequence
+                for (byte[] m: moves) {
+                    if (alpha >= beta) break;
 
-                        // reduce search depth by 1 when doubles are used
-                        double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
-                        beta = Math.min(beta, moveVal);
-                    }
-                    // checks value of using domino + double without moving
-                    if (moves.isEmpty()) {
-                        Game tempGame = new Game(game);
-                        tempGame.useDomino(dom);
-                        tempGame.useDomino(dbl);
-                        tempGame.nextTurn();
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    for (int i = 0; i < m.length; i += 2) tempGame.movePiece(m[i], m[i + 1]);
+                    tempGame.nextTurn();
 
-                        // reduce search depth by 1 when doubles are used
-                        double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
-                        beta = Math.min(beta, domVal);
-                    }
-
-                    // checks if best move for this domino + double is best move so far for the turn
-                    bestVal = Math.min(beta, bestVal);
+                    // reduce search depth by 1 when doubles are used
+                    double moveVal = minimaxEval(tempGame, depth - 2, alpha, beta);
+                    beta = Math.min(beta, moveVal);
                 }
+                // checks value of using domino + double without moving
+                if (moves.isEmpty()) {
+                    Game tempGame = new Game(game);
+                    tempGame.useDomino(dbl);
+                    tempGame.useDomino(game.getRandomDomino(game.getPlayer()));
+                    tempGame.nextTurn();
+
+                    // reduce search depth by 1 when doubles are used
+                    double domVal = minimaxEval(tempGame, depth - 2, alpha, beta) + unusedDominoPenalty;
+                    beta = Math.min(beta, domVal);
+                }
+
+                // checks if best move for this domino + double is best move so far for the turn
+                bestVal = Math.min(beta, bestVal);
             }
         }
 
