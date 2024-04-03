@@ -35,6 +35,11 @@ public class ServerThread extends Thread {
     private final int KA_TIMEOUT = 10000; // how long to wait (ms) before sending a keep-alive
     private long lastActivity;
 
+    private final String AI_REGEX = "^ai:(" +
+            "random|" +
+            "(minimax-(aggressive|defensive|annoying))" +
+            "|(mcts-[1-5])" +
+            ")$";
 
     private String name;
     private String opponent;
@@ -177,7 +182,7 @@ public class ServerThread extends Thread {
                 else if (!message.isConnect()) r.setDeny(new Deny("Connect first"));
                 else if (message.getConnect().getOpponentType().startsWith("ai:")){
                     String opponentType = message.getConnect().getOpponentType();
-                    if (!opponentType.matches("^ai:(random|(minimax-(aggressive|defensive))|(mcts-[1-5]))$"))
+                    if (!opponentType.matches(AI_REGEX))
                         r.setDeny(new Deny("Invalid AI config"));
                     else if (!DBGServer.isAIAvailable()) r.setDeny(new Deny("AI unavailable"));
                     else r.setApprove(new Approve());
